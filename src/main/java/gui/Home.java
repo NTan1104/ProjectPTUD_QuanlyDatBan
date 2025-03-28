@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Home extends JPanel {
-
     private static final long serialVersionUID = 1L;
     private List<ModelLocation> locations;
     @SuppressWarnings("unused")
@@ -19,6 +18,7 @@ public class Home extends JPanel {
     private HomeOverlay homeOverlay;
     private MediaPlayerFactory factory;
     private EmbeddedMediaPlayer mediaPlayer;
+    private Canvas canvas;
 
     public Home() {
         init();
@@ -28,7 +28,7 @@ public class Home extends JPanel {
     private void init() {
         factory = new MediaPlayerFactory();
         mediaPlayer = factory.mediaPlayers().newEmbeddedMediaPlayer();
-        Canvas canvas = new Canvas();
+        canvas = new Canvas();
         mediaPlayer.videoSurface().set(factory.videoSurfaces().newVideoSurface(canvas));
         mediaPlayer.events().addMediaPlayerEventListener(new MediaPlayerEventAdapter() {
             @Override
@@ -39,7 +39,7 @@ public class Home extends JPanel {
             }
         });
         setLayout(new BorderLayout());
-        add(canvas);
+        add(canvas, BorderLayout.CENTER);
     }
 
     private void testData() {
@@ -55,11 +55,24 @@ public class Home extends JPanel {
                 "video/grilled vegetables with flames_preview.mp4"));
     }
 
-    public void initOverlay(Main mainFrame) { // Nhận tham chiếu Main
-        homeOverlay = new HomeOverlay(mainFrame, locations); // Truyền Main vào HomeOverlay
-        homeOverlay.getOverlay().setEventHomeOverlay(index1 -> play(index1));
-        mediaPlayer.overlay().set(homeOverlay);
-        mediaPlayer.overlay().enable(true);
+
+    public void initOverlay(Main mainFrame) {
+        if (homeOverlay == null) {
+            homeOverlay = new HomeOverlay(mainFrame, locations);
+            homeOverlay.getOverlay().setEventHomeOverlay(index1 -> play(index1));
+            mediaPlayer.overlay().set(homeOverlay);
+        }
+        if (isShowing()) {
+            mediaPlayer.overlay().enable(true);
+        } else {
+            addComponentListener(new java.awt.event.ComponentAdapter() {
+                @Override
+                public void componentShown(java.awt.event.ComponentEvent e) {
+                    mediaPlayer.overlay().enable(true);
+                    removeComponentListener(this);
+                }
+            });
+        }
     }
 
     public void play(int index) {
@@ -68,13 +81,29 @@ public class Home extends JPanel {
         if (mediaPlayer.status().isPlaying()) {
             mediaPlayer.controls().stop();
         }
-        mediaPlayer.media().play(location.getVideoPath());
-        mediaPlayer.controls().play();
-        homeOverlay.getOverlay().setIndex(index);
+        if (canvas.isDisplayable()) { // Kiểm tra xem Canvas đã sẵn sàng chưa
+            mediaPlayer.media().play(location.getVideoPath());
+            mediaPlayer.controls().play();
+            homeOverlay.getOverlay().setIndex(index);
+        } else {
+            // Nếu Canvas chưa sẵn sàng, chờ đến khi hiển thị
+            addComponentListener(new java.awt.event.ComponentAdapter() {
+                @Override
+                public void componentShown(java.awt.event.ComponentEvent e) {
+                    mediaPlayer.media().play(location.getVideoPath());
+                    mediaPlayer.controls().play();
+                    homeOverlay.getOverlay().setIndex(index);
+                    removeComponentListener(this);
+                }
+            });
+        }
     }
 
     public void stop() {
-        mediaPlayer.controls().stop();
+        if (mediaPlayer.status().isPlaying()) {
+            mediaPlayer.controls().stop();
+        }
+        mediaPlayer.overlay().enable(false);
         mediaPlayer.release();
         factory.release();
     }

@@ -1,6 +1,6 @@
 package gui;
 
-import com.formdev.flatlaf.FlatClientProperties;
+import com.formdev.flatlaf.FlatClientProperties;	
 import com.formdev.flatlaf.util.UIScale;
 import net.miginfocom.swing.MigLayout;
 
@@ -63,7 +63,7 @@ public class Login extends JPanel {
                     if (username.equals("1") && password.equals("1")) {
                         EventQueue.invokeLater(() -> {
                             mainFrame.dispose(); 
-                            homeNV trangChu = new homeNV();
+                            homeNV trangChu = new homeNV(mainFrame);
                             trangChu.setVisible(true);
                         });
                     } else {

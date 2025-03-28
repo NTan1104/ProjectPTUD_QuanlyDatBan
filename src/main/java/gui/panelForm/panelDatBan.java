@@ -1,10 +1,10 @@
 package gui.panelForm;
 
-import gui.tabbed.TabbedForm;
+import javax.swing.JLabel;	
+import javax.swing.JPanel;
+import java.awt.Color;
 
-import javax.swing.JLabel;
-
-public class panelDatBan extends TabbedForm {
+public class panelDatBan extends JPanel {
 
 	private static final long serialVersionUID = 1L;
 
@@ -12,10 +12,13 @@ public class panelDatBan extends TabbedForm {
 	 * Create the panel.
 	 */
 	public panelDatBan() {
-		
+		setBackground(Color.RED);
+		setLayout(null);
 		JLabel lblNewLabel = new JLabel("quan ly dat ban");
+		lblNewLabel.setBounds(187, 5, 75, 14);
 		add(lblNewLabel);
 
+		
 	}
 
 }
