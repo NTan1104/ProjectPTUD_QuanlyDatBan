@@ -72,7 +72,7 @@ public class DrawerNV extends SimpleDrawerBuilder {
 							if(subIndex==1) {
 								panelDatBan DatBan = new panelDatBan();
 								trangChinh.setPanelBody(DatBan);
-								DatBan.playVideo("video/videobbqfloor.mp4");
+								DatBan.playVideo("video/tableFloor.mp4");
 							}
 							else if(subIndex==2) {
 								
