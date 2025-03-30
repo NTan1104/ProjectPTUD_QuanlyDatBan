@@ -40,27 +40,42 @@ public class DrawerNV extends SimpleDrawerBuilder {
 
 	@Override
 	public SimpleMenuOption getSimpleMenuOption() {
-		String[][] menus = { { "~TRANG CHỦ~" }, { "Trang chủ" }, { "~BÀN~" }, { "Bàn", "Đặt bàn", "Quản lý bàn" },
-				{ "~KHÁCH HÀNG~" }, { "Khách hàng", "Quản lý khách hàng", "Tìm kiếm khách hàng" }, { "~HÓA ĐƠN~" },
-				{ "Hóa đơn", "Quản lý hóa đơn", "Tìm kiếm hóa đơn" }, { "~CÔNG CỤ~" },
-				{ "Công cụ", "Trợ giúp", "Cài đặt" }, { "~TÀI KHOẢN~" },
-				{ "Tài khoản", "Thay đổi mật khẩu", "Đăng xuất", "Thoát" } };
-		String[] icons = { "home-svgrepo-com.svg", "table-svgrepo-com.svg", "customers-svgrepo-com.svg",
+		String[][] menus = { 
+		        { "~TRANG CHỦ~" },
+		        { "Trang chủ" },
+		        { "~BÀN~" },
+		        { "Bàn", "Đặt bàn", "Quản lý bàn" },
+		        { "~KHÁCH HÀNG~" },
+		        { "Khách hàng", "Quản lý khách hàng", "Tìm kiếm khách hàng" },
+		        { "~HÓA ĐƠN~" },
+		        { "Hóa đơn", "Quản lý hóa đơn", "Tìm kiếm hóa đơn" },
+		        { "~CÔNG CỤ~" },
+		        { "Công cụ", "Trợ giúp", "Cài đặt" },
+		        { "~TÀI KHOẢN~" },
+		        { "Tài khoản", "Thay đổi mật khẩu", "Đăng xuất", "Thoát" }
+
+		};
+		String[] icons = { "home-svgrepo-com.svg", "table-svgrepo-com (1).svg", "customers-svgrepo-com.svg",
 				"bill-invoice-ui-svgrepo-com.svg", "tool-01-svgrepo-com.svg", "account-svgrepo-com.svg" };
 
-		return new SimpleMenuOption().setMenus(menus).setIcons(icons).setBaseIconPath("img").setIconScale(0.04f)
+		return new SimpleMenuOption().setMenus(menus).setIcons(icons).setBaseIconPath("img").setIconScale(0.03f)
 				.addMenuEvent(new MenuEvent() {
 					@Override
 					public void selected(MenuAction action, int index, int subIndex) {
 						System.out.println("Menu selected: " + index + " " + subIndex);
-						// Trang chủ index=0
+						// Trang chủ index=0	
 						if (index == 0 && subIndex == 0) {
-							trangChinh.setPanelBody(new panelTrangChu());
+							
+							panelTrangChu home = new panelTrangChu();
+							trangChinh.setPanelBody(home);
+							home.playVideo("video/2424767-uhd_3840_2160_24fps.mp4");
 						}
 						// Bàn idex=1
 						if (index == 1) {
 							if(subIndex==1) {
-								trangChinh.setPanelBody(new panelDatBan());
+								panelDatBan DatBan = new panelDatBan();
+								trangChinh.setPanelBody(DatBan);
+								DatBan.playVideo("video/tableFloor.mp4");
 							}
 							else if(subIndex==2) {
 								

@@ -70,7 +70,6 @@ public class Main extends JFrame {
             home.play(0); 
         });
     }
-
     public static void main(String[] args) {
 
         UIManager.put("defaultFont", new Font(FlatRobotoFont.FAMILY, Font.PLAIN, 13));

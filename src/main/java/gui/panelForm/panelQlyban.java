@@ -1,11 +1,9 @@
 package gui.panelForm;
 
-import javax.swing.JPanel;
-
-import gui.tabbed.TabbedForm;
+import javax.swing.JPanel;	
 import javax.swing.JLabel;
 
-public class panelQlyban extends TabbedForm {
+public class panelQlyban extends JPanel {
 
 	private static final long serialVersionUID = 1L;
 

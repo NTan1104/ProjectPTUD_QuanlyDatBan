@@ -46,7 +46,6 @@ public class WindowsTabbed {
         menuBar.add(createScroll(panelTabbed));
         frame.setJMenuBar(menuBar);
     }
-
     public void removeAllTabbed() {
         panelTabbed.removeAll();
         panelTabbed.repaint();
@@ -64,7 +63,7 @@ public class WindowsTabbed {
     }
 
     private JButton createDrawerButton() {
-        JButton cmd = new JButton(new FlatSVGIcon("img/menu-svgrepo-com.svg", 0.02f));
+        JButton cmd = new JButton(new FlatSVGIcon("img/menu-svgrepo-com.svg", 0.03f));
         cmd.addActionListener((ae) -> {
             Drawer.getInstance().showDrawer();
         });

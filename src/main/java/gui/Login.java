@@ -65,6 +65,7 @@ public class Login extends JPanel {
                             mainFrame.dispose(); 
                             homeNV trangChu = new homeNV(mainFrame);
                             trangChu.setVisible(true);
+                            trangChu.playVideo("video/2424767-uhd_3840_2160_24fps.mp4");
                         });
                     } else {
                         JOptionPane.showMessageDialog(Login.this, "Tài khoản hoặc mật khẩu không đúng!",
