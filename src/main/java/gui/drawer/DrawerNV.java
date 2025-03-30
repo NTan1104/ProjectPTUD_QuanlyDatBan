@@ -4,6 +4,8 @@ import gui.Main;
 import gui.homeNV;
 import gui.panelForm.panelDatBan;
 import gui.panelForm.panelTrangChu;
+import gui.panelForm.PanelQLyHD;
+import gui.panelForm.panelTimKiemHD;
 import raven.drawer.component.SimpleDrawerBuilder;
 import raven.drawer.component.footer.SimpleFooterData;
 import raven.drawer.component.header.SimpleHeaderData;
@@ -84,7 +86,12 @@ public class DrawerNV extends SimpleDrawerBuilder {
 						}
 						// Hóa đơn index=3
 						if( index==3) {
-							
+							if(subIndex==1) {
+								trangChinh.setPanelBody(new PanelQLyHD());
+							}
+							else if(subIndex==2) {
+								trangChinh.setPanelBody(new panelTimKiemHD());
+							}
 						}
 						// Công cụ index=4
 						if(index==4) {
