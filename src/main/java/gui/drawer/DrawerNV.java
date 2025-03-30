@@ -3,6 +3,9 @@ package gui.drawer;
 import gui.Main;
 import gui.homeNV;
 import gui.panelForm.panelDatBan;
+import gui.panelForm.panelQlyKhachhang;
+import gui.panelForm.panelQlyban;
+import gui.panelForm.panelSearchKH;
 import gui.panelForm.panelTrangChu;
 import raven.drawer.component.SimpleDrawerBuilder;
 import raven.drawer.component.footer.SimpleFooterData;
@@ -80,7 +83,11 @@ public class DrawerNV extends SimpleDrawerBuilder {
 						}
 						// Khách hàng index=2
 						if(index==2) {
-							
+							if(subIndex == 1) {
+								trangChinh.setPanelBody(new panelQlyKhachhang());
+							}else if(subIndex == 2) {
+								trangChinh.setPanelBody(new panelSearchKH());
+							}
 						}
 						// Hóa đơn index=3
 						if( index==3) {
