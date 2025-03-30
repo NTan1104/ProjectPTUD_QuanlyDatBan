@@ -73,6 +73,12 @@ public class Login extends JPanel {
                 }
             }
         });
+        txtPassword.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                buttonLogin.doClick(); 
+            }
+        });
     }
 
     @Override

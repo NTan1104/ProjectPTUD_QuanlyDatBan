@@ -54,7 +54,7 @@ public class homeNV extends JFrame {
         
         panelBody = new JPanel();
         panelBody.setBackground(Color.WHITE);
-        panelBody.setBounds(0, 0, 1936, 1097);
+        panelBody.setBounds(0, 0, 1920, 1080);
         getContentPane().add(panelBody);
         setLocationRelativeTo(null);
 
