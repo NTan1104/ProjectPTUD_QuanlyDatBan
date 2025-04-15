@@ -1,4 +1,4 @@
-﻿CREATE DATABASE QuanLyDatBan;
+CREATE DATABASE QuanLyDatBan;
 USE QuanLyDatBan;
 
 
@@ -16,6 +16,7 @@ CREATE TABLE ThueVAT (
     PhanTramThue DECIMAL(5, 2) NOT NULL,
     CONSTRAINT CHK_PhanTramThue CHECK (PhanTramThue >= 0 AND PhanTramThue <= 100)
 );
+
 -- 3. Tạo bảng PhuongThucThanhToan (Phương thức thanh toán)
 CREATE TABLE PhuongThucThanhToan (
     MaPTTT VARCHAR(10) PRIMARY KEY,
@@ -28,7 +29,7 @@ CREATE TABLE KhuyenMai (
     DieuKien VARCHAR(255) NOT NULL,
     Hansudung DATETIME,
     Ngaybatdau DATETIME,
-	PhanTramGiamGia DECIMAL(5, 2) NOT NULL,
+    PhanTramGiamGia DECIMAL(5, 2) NOT NULL,
     CONSTRAINT PhanTramGiamGia CHECK (PhanTramGiamGia >= 0 AND PhanTramGiamGia <= 100)
 );
 
@@ -64,20 +65,28 @@ CREATE TABLE Ban (
     GhiChu TEXT
 );
 
--- 8. Tạo bảng PhieuDatBan (Phiếu đặt bàn)
+-- 8. Tạo bảng ChiTietPhieuDatBan (Chi tiết phiếu đặt bàn)
+CREATE TABLE ChiTietPhieuDatBan (
+    MaCTPDB VARCHAR(10) PRIMARY KEY,
+    TimeNhanBan DATETIME,
+    TimeTraBan DATETIME, 
+    SoNguoi INT
+);
+
+-- 9. Tạo bảng PhieuDatBan (Phiếu đặt bàn)
 CREATE TABLE PhieuDatBan (
     MaPDB VARCHAR(10) PRIMARY KEY,
     MaKhachHang VARCHAR(10) NOT NULL,
     MaBan VARCHAR(10) NOT NULL,
-	MaCTPDB VARCHAR(10) NOT NULL,
+    MaCTPDB VARCHAR(10) NOT NULL,
     MaNV VARCHAR(10) NOT NULL,
     FOREIGN KEY (MaKhachHang) REFERENCES KhachHang(MaKH),
     FOREIGN KEY (MaBan) REFERENCES Ban(MaBan),
-	FOREIGN KEY (MaCTPDB) REFERENCES ChiTietPhieuDatBan(MaCTPDB),
+    FOREIGN KEY (MaCTPDB) REFERENCES ChiTietPhieuDatBan(MaCTPDB),
     FOREIGN KEY (MaNV) REFERENCES NhanVien(MaNV)
 );
 
--- 9. Tạo bảng MonAn (Món ăn)
+-- 10. Tạo bảng MonAn (Món ăn)
 CREATE TABLE MonAn (
     MaMonAn VARCHAR(10) PRIMARY KEY,
     TenMonAn VARCHAR(50) NOT NULL,
@@ -86,7 +95,8 @@ CREATE TABLE MonAn (
 );
 ALTER TABLE MonAn
     ADD LoaiMonAn VARCHAR(20);
--- 10. Tạo bảng HoaDon (Hóa đơn)
+
+-- 11. Tạo bảng HoaDon (Hóa đơn)
 CREATE TABLE HoaDon (
     MaHD VARCHAR(10) PRIMARY KEY,
     MaNV VARCHAR(10) NOT NULL,
@@ -103,7 +113,7 @@ CREATE TABLE HoaDon (
     FOREIGN KEY (MaKM) REFERENCES KhuyenMai(MaKM)
 );
 
--- 11. Tạo bảng ChiTietHoaDon (Chi tiết hóa đơn)
+-- 12. Tạo bảng ChiTietHoaDon (Chi tiết hóa đơn)
 CREATE TABLE ChiTietHoaDon (
     MaCTHD VARCHAR(10) PRIMARY KEY,
     MaHD VARCHAR(10) NOT NULL,
@@ -112,12 +122,4 @@ CREATE TABLE ChiTietHoaDon (
     DonGia FLOAT NOT NULL,
     FOREIGN KEY (MaHD) REFERENCES HoaDon(MaHD),
     FOREIGN KEY (MaMonAn) REFERENCES MonAn(MaMonAn)
-);
-
--- 12. Tạo bảng ChiTietPhieuDatBan (Chi tiết phiếu đặt bàn)
-CREATE TABLE ChiTietPhieuDatBan (
-    MaCTPDB VARCHAR(10) PRIMARY KEY,
-    TimeNhanBan DATETIME,
-    TimeTraBan DATETIME, 
-    SoNguoi INT,
 );

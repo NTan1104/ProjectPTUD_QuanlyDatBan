@@ -9,6 +9,8 @@ public class TaiKhoan {
     private LocalDateTime lockIn;
     private LocalDateTime lockOut;
     private NhanVien nhanVien;
+    
+    string test = nhanVien.getMaNV();
 	public String getTenDangNhap() {
 		return tenDangNhap;
 	}

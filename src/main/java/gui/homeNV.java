@@ -44,13 +44,14 @@ public class homeNV extends JFrame {
         FlatIntelliJLaf.setup();
         UIManager.put("defaultFont", new Font(FlatRobotoFont.FAMILY, Font.PLAIN, 13));
 
+
         // Drawer
         GlassPanePopup.install(this);
         DrawerNV myDrawerBuilder = new DrawerNV(this, loginFrame);
         Drawer.getInstance().setDrawerBuilder(myDrawerBuilder);
 
         // Set size and properties
-        java.net.URL iconURL = getClass().getResource("bbqIcon.png");
+        java.net.URL iconURL = getClass().getResource("/img/bbqIcon.png");
         ImageIcon icon = new ImageIcon(iconURL);
         setIconImage(icon.getImage());
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

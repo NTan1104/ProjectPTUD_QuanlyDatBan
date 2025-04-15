@@ -23,7 +23,7 @@ public class panelDatBan extends JPanel {
         setSize(new Dimension(1535, 850));
 
         // Color theme
-        FlatRobotoFont.install();
+//        FlatRobotoFont.install();
         FlatLaf.registerCustomDefaultsSource("themes");
         FlatIntelliJLaf.setup();
         UIManager.put("defaultFont", new Font(FlatRobotoFont.FAMILY, Font.PLAIN, 13));

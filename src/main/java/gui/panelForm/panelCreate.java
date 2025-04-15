@@ -1,86 +1,117 @@
 package gui.panelForm;
 
-import javax.swing.JPanel;
+import java.awt.Font;
+import javax.swing.*;
+import com.formdev.flatlaf.FlatIntelliJLaf;
+import com.formdev.flatlaf.FlatLaf;
+import com.formdev.flatlaf.fonts.roboto.FlatRobotoFont;
+import entity.KhachHang;
+import javax.swing.GroupLayout.Alignment;
+import javax.swing.LayoutStyle.ComponentPlacement;
 
 public class panelCreate extends JPanel {
-    private javax.swing.JComboBox<Object> combogt;
-    private javax.swing.JLabel jLabelid;
-    private javax.swing.JLabel jLabelkh;
-    private javax.swing.JLabel jLabelsdt;
-    private javax.swing.JLabel jLabelgt;
-    private javax.swing.JTextField txtid;
-    private javax.swing.JTextField txtkh;
-    private javax.swing.JTextField txtsdt;
+    private JLabel jLabelid;
+    private JLabel jLabelkh;
+    private JLabel jLabelsdt;
+    private JLabel jLabelgt;
+    private JTextField txtid;
+    private JTextField txtkh;
+    private JTextField txtsdt;
+    private JComboBox<String> combogt;
 
     public panelCreate() {
         initComponents();
     }
 
     private void initComponents() {
-        jLabelid = new javax.swing.JLabel();
-        txtid = new javax.swing.JTextField();
-        jLabelkh = new javax.swing.JLabel();
-        txtkh = new javax.swing.JTextField();
-        jLabelsdt = new javax.swing.JLabel();
-        txtsdt = new javax.swing.JTextField();
-        jLabelgt = new javax.swing.JLabel();
-        combogt = new javax.swing.JComboBox<>();
+        FlatRobotoFont.install();
+        FlatLaf.registerCustomDefaultsSource("themes");
+        FlatIntelliJLaf.setup();
+        UIManager.put("defaultFont", new Font(FlatRobotoFont.FAMILY, Font.PLAIN, 13));
 
-        jLabelid.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        jLabelid.setText("Mã KH");
+        jLabelid = new JLabel("Mã khách hàng");
+        txtid = new JTextField();
 
-        jLabelkh.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        jLabelkh.setText("Tên KH");
+        jLabelkh = new JLabel("Tên khách hàng");
+        txtkh = new JTextField();
 
-        jLabelsdt.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        jLabelsdt.setText("SDT");
+        jLabelsdt = new JLabel("Số điện thoại");
+        txtsdt = new JTextField();
 
-        jLabelgt.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        jLabelgt.setText("Giới tính");
-        
-        combogt.addItem("Nam");
-        combogt.addItem("Nữ");
+        jLabelgt = new JLabel("Giới tính");
+        combogt = new JComboBox<>(new String[]{"Nam", "Nữ"});
 
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
+        // Xóa căn phải, để mặc định căn trái
+        jLabelid.setHorizontalAlignment(SwingConstants.LEADING);
+        jLabelkh.setHorizontalAlignment(SwingConstants.LEADING);
+        jLabelsdt.setHorizontalAlignment(SwingConstants.LEADING);
+        jLabelgt.setHorizontalAlignment(SwingConstants.LEADING);
+
+        GroupLayout layout = new GroupLayout(this);
         this.setLayout(layout);
-        layout.setHorizontalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+        layout.setHorizontalGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addGap(10, 10, 10)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jLabelid, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabelkh, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabelsdt, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabelgt, javax.swing.GroupLayout.PREFERRED_SIZE, 100, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(txtid, javax.swing.GroupLayout.DEFAULT_SIZE, 200, Short.MAX_VALUE)
+                .addGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING)
+                    // Đặt chiều rộng cố định cho các label để thẳng hàng
+                    .addComponent(jLabelid, GroupLayout.PREFERRED_SIZE, 120, GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabelkh, GroupLayout.PREFERRED_SIZE, 120, GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabelsdt, GroupLayout.PREFERRED_SIZE, 120, GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabelgt, GroupLayout.PREFERRED_SIZE, 120, GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING)
+                    .addComponent(txtid, GroupLayout.DEFAULT_SIZE, 200, Short.MAX_VALUE)
                     .addComponent(txtkh)
                     .addComponent(txtsdt)
-                    .addComponent(combogt, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addGap(50, 50, 50))
-        );
+                    .addComponent(combogt, 0, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGap(50, 50, 50)));
 
-        layout.setVerticalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+        layout.setVerticalGroup(layout.createParallelGroup(GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addGap(30, 30, 30)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                .addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabelid)
-                    .addComponent(txtid, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(txtid, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabelkh)
-                    .addComponent(txtkh, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(txtkh, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabelsdt)
-                    .addComponent(txtsdt, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(txtsdt, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(layout.createParallelGroup(GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabelgt)
-                    .addComponent(combogt, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(16, Short.MAX_VALUE))
-        );
+                    .addComponent(combogt, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(16, Short.MAX_VALUE)));
+    }
+
+    public KhachHang getData() {
+        String maKH = txtid.getText().trim();
+        String tenKH = txtkh.getText().trim();
+        String sdt = txtsdt.getText().trim();
+        String gioiTinh = (String) combogt.getSelectedItem();
+
+        if (maKH.isEmpty() || tenKH.isEmpty() || sdt.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Vui lòng điền đầy đủ thông tin!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+            return null;
+        }
+
+        if (!sdt.matches("\\d{10,11}")) {
+            JOptionPane.showMessageDialog(this, "Số điện thoại phải có 10-11 chữ số!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+            return null;
+        }
+
+        return new KhachHang(maKH, tenKH, sdt, gioiTinh);
+    }
+
+
+    public void setData(KhachHang kh) {
+        txtid.setText(kh.getMaKH());
+        txtkh.setText(kh.getTenKH());
+        txtsdt.setText(kh.getSdt());
+        combogt.setSelectedItem(kh.getGioiTinh());
+        txtid.setEditable(false); 
     }
 }

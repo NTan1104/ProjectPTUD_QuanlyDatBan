@@ -1,11 +1,19 @@
 package gui.drawer;
 
-import gui.Main;
+import com.formdev.flatlaf.fonts.roboto.FlatRobotoFont;
+
+import gui.Main;	
 import gui.homeNV;
+import gui.panelForm.PanelQLyHD;
 import gui.panelForm.panelDatBan;
+import gui.panelForm.panelQLyTK;
+//import gui.panelForm.panelQLyTK;
 import gui.panelForm.panelQlyKhachhang;
+import gui.panelForm.panelQlyMonAn;
 import gui.panelForm.panelQlyban;
 import gui.panelForm.panelSearchKH;
+import gui.panelForm.panelThongke;
+import gui.panelForm.panelTimKiemHD;
 import gui.panelForm.panelTrangChu;
 import raven.drawer.component.SimpleDrawerBuilder;
 import raven.drawer.component.footer.SimpleFooterData;
@@ -23,6 +31,15 @@ public class DrawerNV extends SimpleDrawerBuilder {
 	public DrawerNV(homeNV trangChinh, Main trangDangNhap) {
 		this.trangChinh = trangChinh;
 		this.trangDangNhap = trangDangNhap;
+        // Color theme
+        FlatRobotoFont.install();
+//      UIManager.put("Panel.background", new Color(247, 248, 252)); // Trắng xám nhạt nhẹ nhàng
+//      UIManager.put("Button.background", new Color(52, 102, 255)); // Xanh dương nhẹ cho nút
+//      UIManager.put("Button.foreground", Color.WHITE);
+//      UIManager.put("Button.disabledBackground", new Color(209, 213, 219)); // Xám nhạt khi vô hiệu
+//      UIManager.put("Label.foreground", new Color(17, 24, 39)); // Xám đen đậm cho chữ
+//      UIManager.put("Component.borderColor", new Color(229, 231, 235)); // Viền xám nhạt
+        
 	}
 
 	@Override
@@ -49,10 +66,12 @@ public class DrawerNV extends SimpleDrawerBuilder {
 		        { "Khách hàng", "Quản lý khách hàng", "Tìm kiếm khách hàng" },
 		        { "~HÓA ĐƠN~" },
 		        { "Hóa đơn", "Quản lý hóa đơn", "Tìm kiếm hóa đơn" },
-		        { "~CÔNG CỤ~" },
-		        { "Công cụ", "Trợ giúp", "Cài đặt" },
+		        { "~Thống kê~" },
+		        { "Thống kê", "Thống kê", "Món ăn"},
 		        { "~TÀI KHOẢN~" },
-		        { "Tài khoản", "Thay đổi mật khẩu", "Đăng xuất", "Thoát" }
+		        { "Tài khoản", "Quản lý tài khoản", "Đăng xuất", "Thoát" },
+		        { "~CÔNG CỤ~" },
+		        { "Công cụ", "Trợ giúp", "Cài đặt" }
 
 		};
 		String[] icons = { "home-svgrepo-com.svg", "table-svgrepo-com (1).svg", "customers-svgrepo-com.svg",
@@ -91,16 +110,29 @@ public class DrawerNV extends SimpleDrawerBuilder {
 						}
 						// Hóa đơn index=3
 						if( index==3) {
-							
+							if(subIndex==1) {
+								trangChinh.setPanelBody(new PanelQLyHD());
+							}else if(subIndex == 2) {
+								trangChinh.setPanelBody(new panelTimKiemHD());
+							}
 						}
 						// Công cụ index=4
 						if(index==4) {
-							
+							if(subIndex == 1) {
+								trangChinh.setPanelBody(new panelThongke());
+							}else if(subIndex == 2) {
+								try {
+									trangChinh.setPanelBody(new panelQlyMonAn());
+								} catch (Exception e) {
+									// TODO Auto-generated catch block
+									e.printStackTrace();
+								}
+							}
 						}
 						// Tài khoản index=5
 						if (index == 5) {
 							if (subIndex == 1) {
-
+								trangChinh.setPanelBody(new panelQLyTK());
 							} else if (subIndex == 2) {
 								trangChinh.setVisible(false); // Ẩn homeNV thay vì đóng
                                 trangDangNhap.switchToLogin(); // Chuyển về Main

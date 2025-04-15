@@ -35,6 +35,7 @@ public class panelTang1 extends JPanel {
         UIManager.put("Label.foreground", new Color(17, 24, 39)); // Xám đen đậm cho chữ
         UIManager.put("Component.borderColor", new Color(229, 231, 235)); // Viền xám nhạt
 
+        
         // Thiết kế panel chính
         setLayout(null);
         setSize(1535, 825);
