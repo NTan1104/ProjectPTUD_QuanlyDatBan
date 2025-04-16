@@ -6,6 +6,24 @@ public class MonAn {
     private double gia;
     private String ghiChu;
     private String loaiMonAn;
+    private String linkIMG;
+    public MonAn() {
+    	
+    }
+    public MonAn(String maMonAn, String tenMonAn, double gia, String ghiChu, String loaiMonAn, String linkIMG) {
+    	this.maMonAn = maMonAn;
+    	this.tenMonAn = tenMonAn;
+    	this.gia = gia;
+    	this.ghiChu = ghiChu;
+    	this.loaiMonAn = loaiMonAn;
+    	this.linkIMG = linkIMG;
+    }
+	public String getLinkIMG() {
+		return linkIMG;
+	}
+	public void setLinkIMG(String linkIMG) {
+		this.linkIMG = linkIMG;
+	}
 	public String getMaMonAn() {
 		return maMonAn;
 	}

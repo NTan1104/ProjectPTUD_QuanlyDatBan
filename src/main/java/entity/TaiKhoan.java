@@ -1,13 +1,12 @@
 package entity;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 public class TaiKhoan {
     private String tenDangNhap;
     private String matKhau;
     private boolean trangThai;
-    private LocalDateTime lockIn;
-    private LocalDateTime lockOut;
     private NhanVien nhanVien;
 	public String getTenDangNhap() {
 		return tenDangNhap;
@@ -27,24 +26,32 @@ public class TaiKhoan {
 	public void setTrangThai(boolean trangThai) {
 		this.trangThai = trangThai;
 	}
-	public LocalDateTime getLockIn() {
-		return lockIn;
-	}
-	public void setLockIn(LocalDateTime lockIn) {
-		this.lockIn = lockIn;
-	}
-	public LocalDateTime getLockOut() {
-		return lockOut;
-	}
-	public void setLockOut(LocalDateTime lockOut) {
-		this.lockOut = lockOut;
-	}
 	public NhanVien getNhanVien() {
 		return nhanVien;
 	}
 	public void setNhanVien(NhanVien nhanVien) {
 		this.nhanVien = nhanVien;
 	}
-
+	@Override
+	public int hashCode() {
+		return Objects.hash(nhanVien);
+	}
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		TaiKhoan other = (TaiKhoan) obj;
+		return Objects.equals(nhanVien, other.nhanVien);
+	}
+	@Override
+	public String toString() {
+		return "TaiKhoan [tenDangNhap=" + tenDangNhap + ", matKhau=" + matKhau + ", trangThai=" + trangThai
+				+ ", nhanVien=" + nhanVien + "]";
+	}
+	
 
 }

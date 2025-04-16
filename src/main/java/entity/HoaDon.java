@@ -11,6 +11,28 @@ public class HoaDon {
     private KhuyenMai khuyenMai;
     private LocalDateTime ngayLap;
     private LocalDateTime ngayXuat;
+    private String trangThai;
+    public HoaDon() {
+    	
+    }
+    public HoaDon(String maHD, NhanVien nhanVien, KhachHang khachHang, PhuongThucThanhToan PTTT, ThueVAT thueVAT, KhuyenMai khuyenMai, LocalDateTime ngayLap, LocalDateTime ngayXuat, String trangThai) {
+    	this.maHD = maHD;
+    	this.nhanVien = nhanVien;
+    	this.khachHang = khachHang;
+    	this.PTTT = PTTT;
+    	this.thueVAT = thueVAT;
+    	this.khuyenMai = khuyenMai;
+    	this.ngayLap = ngayLap;
+    	this.ngayXuat = ngayXuat;
+    	this.trangThai = trangThai;
+    }
+    
+	public String getTrangThai() {
+		return trangThai;
+	}
+	public void setTrangThai(String trangThai) {
+		this.trangThai = trangThai;
+	}
 	public String getMaHD() {
 		return maHD;
 	}
