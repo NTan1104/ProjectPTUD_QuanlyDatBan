@@ -32,12 +32,12 @@ import com.toedter.calendar.JDateChooser;
 
 public class panelThongke extends JPanel {
     private static final long serialVersionUID = 1L;
-    private JTable table;
-    private DefaultTableModel tableModel;
-    private JPanel detailPanel;
-    private JButton btnNewButton;
-    private RoundedScrollPane scrollPane;
-    private JDateChooser dateChooserEnd;
+    private JTable tblThongKe; // Bảng thống kê (không sử dụng)
+    private DefaultTableModel mdlThongKe; // Mô hình bảng (không sử dụng)
+    private JPanel pnlChiTiet; // Panel chi tiết (không sử dụng)
+    private JButton btnThongKe; // Nút thống kê (không sử dụng)
+    private RoundedScrollPane scrThongKe; // ScrollPane chứa bảng
+    private JDateChooser dtcNgayKetThuc; // Chọn ngày kết thúc
 
     public panelThongke() {
         setBackground(SystemColor.controlHighlight);
@@ -51,138 +51,134 @@ public class panelThongke extends JPanel {
         UIManager.put("defaultFont", new Font(FlatRobotoFont.FAMILY, Font.PLAIN, 13));
 
         // Tùy chỉnh màu sắc qua UIManager
-        UIManager.put("Panel.background", new Color(247, 248, 252)); // Trắng xám nhạt nhẹ nhàng
-        UIManager.put("Button.background", new Color(52, 102, 255)); // Xanh dương nhẹ cho nút
+        UIManager.put("Panel.background", new Color(247, 248, 252));
+        UIManager.put("Button.background", new Color(52, 102, 255));
         UIManager.put("Button.foreground", Color.WHITE);
-        UIManager.put("Button.disabledBackground", new Color(209, 213, 219)); // Xám nhạt khi vô hiệu
-        UIManager.put("Label.foreground", new Color(17, 24, 39)); // Xám đen đậm cho chữ
-        UIManager.put("Component.borderColor", new Color(229, 231, 235)); // Viền xám nhạt
+        UIManager.put("Button.disabledBackground", new Color(209, 213, 219));
+        UIManager.put("Label.foreground", new Color(17, 24, 39));
+        UIManager.put("Component.borderColor", new Color(229, 231, 235));
 
         // Tiêu đề
-        JLabel lblTitle = new JLabel("THỐNG KÊ");
-        lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 20));
-        lblTitle.setHorizontalAlignment(SwingConstants.CENTER);
-        lblTitle.setBounds(0, 10, 1535, 27);
-        add(lblTitle);
+        JLabel lblTieuDe = new JLabel("THỐNG KÊ");
+        lblTieuDe.setFont(new Font("Segoe UI", Font.BOLD, 20));
+        lblTieuDe.setHorizontalAlignment(SwingConstants.CENTER);
+        lblTieuDe.setBounds(0, 10, 1535, 27);
+        add(lblTieuDe);
 
-        JPanel panel = new JPanel();
-        panel.setBorder(new LineBorder(new Color(0, 0, 0)));
-        panel.setBounds(10, 50, 1515, 246);
-        add(panel);
-        panel.setLayout(null);
+        JPanel pnlTongQuan = new JPanel();
+        pnlTongQuan.setBorder(new LineBorder(new Color(0, 0, 0)));
+        pnlTongQuan.setBounds(10, 50, 1515, 246);
+        add(pnlTongQuan);
+        pnlTongQuan.setLayout(null);
 
-        JPanel panel_1 = new JPanel();
-        panel_1.setBorder(new LineBorder(new Color(0, 0, 0)));
-        panel_1.setBounds(50, 25, 300, 196);
-        panel.add(panel_1);
-        panel_1.setLayout(null);
+        JPanel pnlTongDoanhThu = new JPanel();
+        pnlTongDoanhThu.setBorder(new LineBorder(new Color(0, 0, 0)));
+        pnlTongDoanhThu.setBounds(50, 25, 300, 196);
+        pnlTongQuan.add(pnlTongDoanhThu);
+        pnlTongDoanhThu.setLayout(null);
 
-        JLabel lblNewLabel = new JLabel("Tổng doanh thu");
-        lblNewLabel.setFont(new Font("Segoe UI", Font.BOLD, 15));
-        lblNewLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        lblNewLabel.setBounds(0, 10, 300, 24);
-        panel_1.add(lblNewLabel);
+        JLabel lblTongDoanhThu = new JLabel("Tổng doanh thu");
+        lblTongDoanhThu.setFont(new Font("Segoe UI", Font.BOLD, 15));
+        lblTongDoanhThu.setHorizontalAlignment(SwingConstants.CENTER);
+        lblTongDoanhThu.setBounds(0, 10, 300, 24);
+        pnlTongDoanhThu.add(lblTongDoanhThu);
 
-        JLabel lblNewLabel_2 = new JLabel();
-        lblNewLabel_2.setBounds(10, 86, 56, 50);
-        // Tải hình ảnh bằng getClass().getResource()
+        JLabel lblIconDoanhThu = new JLabel();
+        lblIconDoanhThu.setBounds(10, 86, 56, 50);
         URL imgURL1 = getClass().getResource("/img/icons8-increase-50.png");
         if (imgURL1 != null) {
-            lblNewLabel_2.setIcon(new ImageIcon(imgURL1));
+            lblIconDoanhThu.setIcon(new ImageIcon(imgURL1));
         } else {
-            lblNewLabel_2.setText("No Image");
+            lblIconDoanhThu.setText("No Image");
         }
-        panel_1.add(lblNewLabel_2);
+        pnlTongDoanhThu.add(lblIconDoanhThu);
 
-        JPanel panel_1_1 = new JPanel();
-        panel_1_1.setBorder(new LineBorder(new Color(0, 0, 0)));
-        panel_1_1.setLayout(null);
-        panel_1_1.setBounds(555, 25, 300, 196);
-        panel.add(panel_1_1);
+        JPanel pnlTongSoBan = new JPanel();
+        pnlTongSoBan.setBorder(new LineBorder(new Color(0, 0, 0)));
+        pnlTongSoBan.setLayout(null);
+        pnlTongSoBan.setBounds(555, 25, 300, 196);
+        pnlTongQuan.add(pnlTongSoBan);
 
-        JLabel lblNewLabel_1 = new JLabel("Tổng số bàn");
-        lblNewLabel_1.setFont(new Font("Segoe UI", Font.BOLD, 15));
-        lblNewLabel_1.setHorizontalAlignment(SwingConstants.CENTER);
-        lblNewLabel_1.setBounds(0, 10, 300, 24);
-        panel_1_1.add(lblNewLabel_1);
+        JLabel lblTongSoBan = new JLabel("Tổng số bàn");
+        lblTongSoBan.setFont(new Font("Segoe UI", Font.BOLD, 15));
+        lblTongSoBan.setHorizontalAlignment(SwingConstants.CENTER);
+        lblTongSoBan.setBounds(0, 10, 300, 24);
+        pnlTongSoBan.add(lblTongSoBan);
 
-        JLabel lblNewLabel_2_1 = new JLabel();
-        lblNewLabel_2_1.setBounds(24, 86, 56, 50);
-        // Tải hình ảnh bằng getClass().getResource()
+        JLabel lblIconSoBan = new JLabel();
+        lblIconSoBan.setBounds(24, 86, 56, 50);
         URL imgURL2 = getClass().getResource("/img/icons8-table-50.png");
         if (imgURL2 != null) {
-            lblNewLabel_2_1.setIcon(new ImageIcon(imgURL2));
+            lblIconSoBan.setIcon(new ImageIcon(imgURL2));
         } else {
-            lblNewLabel_2_1.setText("No Image");
+            lblIconSoBan.setText("No Image");
         }
-        panel_1_1.add(lblNewLabel_2_1);
+        pnlTongSoBan.add(lblIconSoBan);
 
-        JPanel panel_1_1_1 = new JPanel();
-        panel_1_1_1.setBorder(new LineBorder(new Color(0, 0, 0)));
-        panel_1_1_1.setLayout(null);
-        panel_1_1_1.setBounds(1060, 25, 300, 196);
-        panel.add(panel_1_1_1);
+        JPanel pnlSoMonAn = new JPanel();
+        pnlSoMonAn.setBorder(new LineBorder(new Color(0, 0, 0)));
+        pnlSoMonAn.setLayout(null);
+        pnlSoMonAn.setBounds(1060, 25, 300, 196);
+        pnlTongQuan.add(pnlSoMonAn);
 
-        JLabel lblNewLabel_1_1 = new JLabel("Số lượng đồ ăn được bán");
-        lblNewLabel_1_1.setFont(new Font("Segoe UI", Font.BOLD, 15));
-        lblNewLabel_1_1.setHorizontalAlignment(SwingConstants.CENTER);
-        lblNewLabel_1_1.setBounds(0, 10, 300, 24);
-        panel_1_1_1.add(lblNewLabel_1_1);
+        JLabel lblSoMonAn = new JLabel("Số lượng đồ ăn được bán");
+        lblSoMonAn.setFont(new Font("Segoe UI", Font.BOLD, 15));
+        lblSoMonAn.setHorizontalAlignment(SwingConstants.CENTER);
+        lblSoMonAn.setBounds(0, 10, 300, 24);
+        pnlSoMonAn.add(lblSoMonAn);
 
-        JLabel lblNewLabel_2_2 = new JLabel();
-        lblNewLabel_2_2.setBounds(21, 86, 62, 50);
-        // Tải hình ảnh bằng getClass().getResource()
+        JLabel lblIconMonAn = new JLabel();
+        lblIconMonAn.setBounds(21, 86, 62, 50);
         URL imgURL3 = getClass().getResource("/img/icons8-grilled-meat-64.png");
         if (imgURL3 != null) {
-            lblNewLabel_2_2.setIcon(new ImageIcon(imgURL3));
+            lblIconMonAn.setIcon(new ImageIcon(imgURL3));
         } else {
-            lblNewLabel_2_2.setText("No Image");
+            lblIconMonAn.setText("No Image");
         }
-        panel_1_1_1.add(lblNewLabel_2_2);
+        pnlSoMonAn.add(lblIconMonAn);
 
-        JComboBox<String> comboBox = new JComboBox<>();
-        comboBox.setBounds(333, 310, 179, 21);
-        comboBox.addItem("Theo ngày");
-        comboBox.addItem("Theo tháng");
-        comboBox.addItem("Theo năm");
-        add(comboBox);
+        JComboBox<String> cbLoaiThoiGian = new JComboBox<>();
+        cbLoaiThoiGian.setBounds(333, 310, 179, 21);
+        cbLoaiThoiGian.addItem("Theo ngày");
+        cbLoaiThoiGian.addItem("Theo tháng");
+        cbLoaiThoiGian.addItem("Theo năm");
+        add(cbLoaiThoiGian);
 
-        JLabel lblNewLabel_3 = new JLabel("Loại thời gian");
-        lblNewLabel_3.setFont(new Font("Segoe UI", Font.BOLD, 15));
-        lblNewLabel_3.setHorizontalAlignment(SwingConstants.CENTER);
-        lblNewLabel_3.setBounds(170, 306, 153, 27);
-        add(lblNewLabel_3);
+        JLabel lblLoaiThoiGian = new JLabel("Loại thời gian");
+        lblLoaiThoiGian.setFont(new Font("Segoe UI", Font.BOLD, 15));
+        lblLoaiThoiGian.setHorizontalAlignment(SwingConstants.CENTER);
+        lblLoaiThoiGian.setBounds(170, 306, 153, 27);
+        add(lblLoaiThoiGian);
 
-        // Thêm JDateChooser cho Ngày kết thúc
-        dateChooserEnd = new JDateChooser();
-        dateChooserEnd.setBounds(985, 310, 120, 19);
-        dateChooserEnd.setDateFormatString("dd/MM/yyyy"); // Định dạng ngày
-        add(dateChooserEnd);
+        dtcNgayKetThuc = new JDateChooser();
+        dtcNgayKetThuc.setBounds(985, 310, 120, 19);
+        dtcNgayKetThuc.setDateFormatString("dd/MM/yyyy");
+        add(dtcNgayKetThuc);
 
-        JPanel panel_2 = new JPanel();
+        JPanel pnlBieuDo = new JPanel();
         TitledBorder titledBorder = new TitledBorder(new LineBorder(new Color(0, 0, 0)), "Biểu đồ", TitledBorder.CENTER, TitledBorder.TOP);
-        titledBorder.setTitleFont(new Font("Segoe UI", Font.BOLD, 15)); // Đặt font
-        panel_2.setBorder(titledBorder); // Gán TitledBorder đã tùy chỉnh
-        panel_2.setBounds(10, 358, 1515, 411);
-        add(panel_2);
-        panel_2.setLayout(null);
+        titledBorder.setTitleFont(new Font("Segoe UI", Font.BOLD, 15));
+        pnlBieuDo.setBorder(titledBorder);
+        pnlBieuDo.setBounds(10, 358, 1515, 411);
+        add(pnlBieuDo);
+        pnlBieuDo.setLayout(null);
 
-        JLabel lblNewLabel_3_1 = new JLabel("Ngày bắt đầu");
-        lblNewLabel_3_1.setHorizontalAlignment(SwingConstants.CENTER);
-        lblNewLabel_3_1.setFont(new Font("Segoe UI", Font.BOLD, 15));
-        lblNewLabel_3_1.setBounds(532, 306, 153, 27);
-        add(lblNewLabel_3_1);
+        JLabel lblNgayBatDau = new JLabel("Ngày bắt đầu");
+        lblNgayBatDau.setHorizontalAlignment(SwingConstants.CENTER);
+        lblNgayBatDau.setFont(new Font("Segoe UI", Font.BOLD, 15));
+        lblNgayBatDau.setBounds(532, 306, 153, 27);
+        add(lblNgayBatDau);
 
-        JLabel lblNewLabel_3_1_1 = new JLabel("Ngày kết thúc");
-        lblNewLabel_3_1_1.setHorizontalAlignment(SwingConstants.CENTER);
-        lblNewLabel_3_1_1.setFont(new Font("Segoe UI", Font.BOLD, 15));
-        lblNewLabel_3_1_1.setBounds(829, 306, 153, 27);
-        add(lblNewLabel_3_1_1);
+        JLabel lblNgayKetThuc = new JLabel("Ngày kết thúc");
+        lblNgayKetThuc.setHorizontalAlignment(SwingConstants.CENTER);
+        lblNgayKetThuc.setFont(new Font("Segoe UI", Font.BOLD, 15));
+        lblNgayKetThuc.setBounds(829, 306, 153, 27);
+        add(lblNgayKetThuc);
 
-        JDateChooser dateChooserEnd_1 = new JDateChooser();
-        dateChooserEnd_1.setDateFormatString("dd/MM/yyyy");
-        dateChooserEnd_1.setBounds(678, 310, 120, 19);
-        add(dateChooserEnd_1);
+        JDateChooser dtcNgayBatDau = new JDateChooser();
+        dtcNgayBatDau.setDateFormatString("dd/MM/yyyy");
+        dtcNgayBatDau.setBounds(678, 310, 120, 19);
+        add(dtcNgayBatDau);
     }
 
     class RoundedScrollPane extends JScrollPane {
@@ -193,7 +189,7 @@ public class panelThongke extends JPanel {
             super(view);
             this.cornerRadius = radius;
             setOpaque(false);
-            setBorder(new EmptyBorder(5, 5, 5, 5)); // Thêm padding để không bị che mất góc
+            setBorder(new EmptyBorder(5, 5, 5, 5));
             getViewport().setOpaque(false);
             getViewport().setBackground(new Color(0, 0, 0, 0));
             setBackground(Color.WHITE);
@@ -203,11 +199,8 @@ public class panelThongke extends JPanel {
         protected void paintComponent(Graphics g) {
             Graphics2D g2 = (Graphics2D) g.create();
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
-            // Vẽ nền bo góc toàn bộ
             g2.setColor(getBackground());
             g2.fill(new RoundRectangle2D.Float(0, 0, getWidth(), getHeight(), cornerRadius, cornerRadius));
-
             g2.dispose();
         }
 
@@ -215,11 +208,8 @@ public class panelThongke extends JPanel {
         protected void paintBorder(Graphics g) {
             Graphics2D g2 = (Graphics2D) g.create();
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
-            // Vẽ viền bo tròn
-            g2.setColor(Color.GRAY); // Đổi màu viền nếu cần
+            g2.setColor(Color.GRAY);
             g2.draw(new RoundRectangle2D.Float(0, 0, getWidth() - 1, getHeight() - 1, cornerRadius, cornerRadius));
-
             g2.dispose();
         }
     }
@@ -231,7 +221,7 @@ public class panelThongke extends JPanel {
         public RoundedPane(int radius) {
             this.cornerRadius = radius;
             setOpaque(false);
-            setBorder(new EmptyBorder(5, 5, 5, 5)); // Thêm padding để không bị che mất góc
+            setBorder(new EmptyBorder(5, 5, 5, 5));
             setBackground(Color.WHITE);
         }
 
@@ -240,11 +230,8 @@ public class panelThongke extends JPanel {
             super.paintComponent(g);
             Graphics2D g2 = (Graphics2D) g.create();
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
-            // Vẽ nền bo góc
             g2.setColor(getBackground());
             g2.fill(new RoundRectangle2D.Float(0, 0, getWidth(), getHeight(), cornerRadius, cornerRadius));
-
             g2.dispose();
         }
 
@@ -252,11 +239,8 @@ public class panelThongke extends JPanel {
         protected void paintBorder(Graphics g) {
             Graphics2D g2 = (Graphics2D) g.create();
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
-            // Vẽ viền bo tròn
             g2.setColor(Color.GRAY);
             g2.draw(new RoundRectangle2D.Float(1, 1, getWidth() - 2, getHeight() - 2, cornerRadius, cornerRadius));
-
             g2.dispose();
         }
     }
