@@ -245,14 +245,18 @@ public class panelQlyKhachhang extends JPanel {
         // Thêm ActionListener cho các nút
         btnThoat.addActionListener(e -> GlassPanePopup.closePopupLast());
         btnLuu.addActionListener(e -> {
-            try {
+        	try {
                 KhachHang kh = create.getData();
                 if (kh != null) {
+                    if (dao.checkMaKHExists(kh.getMaKH())) {
+                        Notifications.getInstance().show(Notifications.Type.ERROR, "Mã khách hàng đã tồn tại!");
+                        return;
+                    }
                     dao.addKhachHang(kh);
                     loadData();
                     Notifications.getInstance().show(Notifications.Type.SUCCESS, "Thêm khách hàng thành công!");
+                    GlassPanePopup.closePopupLast();
                 }
-                GlassPanePopup.closePopupLast();
             } catch (Exception ex) {
                 Notifications.getInstance().show(Notifications.Type.ERROR, "Lỗi thêm khách hàng: " + ex.getMessage());
             }

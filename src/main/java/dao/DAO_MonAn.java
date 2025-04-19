@@ -5,13 +5,13 @@ import entity.MonAn;
 
 import java.sql.CallableStatement;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
 
 public class DAO_MonAn extends BaseDAO {
 
-    // Lấy tất cả món ăn
     public List<MonAn> getAllMonAn() throws Exception {
         List<MonAn> list = new ArrayList<>();
         String sql = "{CALL GetAllMonAn}";
@@ -142,5 +142,35 @@ public class DAO_MonAn extends BaseDAO {
             }
         }
         return null;
+    }
+    
+    public boolean checkMaMonAnExists(String maMonAn) throws Exception {
+        String sql = "SELECT COUNT(*) FROM MonAn WHERE MaMonAn = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, maMonAn);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;
+                }
+            }
+        }
+        return false;
+    }
+    
+    public List<String> getAllLoaiMonAn() throws Exception {
+        List<String> list = new ArrayList<>();
+        String sql = "{CALL GetAllLoaiMonAn}";
+        try (Connection conn = getConnection();
+             CallableStatement cstmt = conn.prepareCall(sql);
+             ResultSet rs = cstmt.executeQuery()) {
+            while (rs.next()) {
+                String loaiMonAn = rs.getString("LoaiMonAn");
+                if (loaiMonAn != null && !loaiMonAn.trim().isEmpty()) {
+                    list.add(loaiMonAn);
+                }
+            }
+        }
+        return list;
     }
 }

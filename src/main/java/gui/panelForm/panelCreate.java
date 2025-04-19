@@ -93,11 +93,30 @@ public class panelCreate extends JPanel {
         String sdt = txtsdt.getText().trim();
         String gioiTinh = (String) combogt.getSelectedItem();
 
-        if (maKH.isEmpty() || tenKH.isEmpty() || sdt.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Vui lòng điền đầy đủ thông tin!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+        if (maKH.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Vui lòng nhập mã khách hàng", "Lỗi", JOptionPane.ERROR_MESSAGE);
+            txtid.requestFocusInWindow();
             return null;
         }
-
+        
+        if(!maKH.matches("^KH\\d{3}")) {
+        	JOptionPane.showMessageDialog(this, "Vui lòng nhập theo mẫu KH theo sau là 3 chữ số", "Lỗi", JOptionPane.ERROR_MESSAGE);
+        	txtid.requestFocusInWindow();
+            return null;
+        }
+        
+        if (tenKH.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Vui lòng nhập tên khách hàng", "Lỗi", JOptionPane.ERROR_MESSAGE);
+            txtkh.requestFocusInWindow();
+            return null;
+        }
+        
+        if(sdt.isEmpty()) {
+        	JOptionPane.showMessageDialog(this, "Vui lòng nhập tên khách hàng", "Lỗi", JOptionPane.ERROR_MESSAGE);
+        	txtsdt.requestFocusInWindow();
+            return null;
+        }
+        
         if (!sdt.matches("\\d{10,11}")) {
             JOptionPane.showMessageDialog(this, "Số điện thoại phải có 10-11 chữ số!", "Lỗi", JOptionPane.ERROR_MESSAGE);
             return null;

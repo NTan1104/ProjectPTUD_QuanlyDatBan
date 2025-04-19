@@ -1,13 +1,21 @@
 package gui.drawer;
 
-import gui.HomeQL;
-import gui.Main;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
+import javax.swing.JOptionPane;
+
+import gui.Main;
+import gui.homeAll;
 import gui.panelForm.PanelQLyHD;
 import gui.panelForm.panelDatBan;
 import gui.panelForm.panelQLNhanVien;
+import gui.panelForm.panelQLyTK;
+import gui.panelForm.panelQlyKhachhang;
+import gui.panelForm.panelQlyMonAn;
+import gui.panelForm.panelSearchKH;
+import gui.panelForm.panelThongke;
 import gui.panelForm.panelTimKiemHD;
-
 import gui.panelForm.panelTrangChu;
 import raven.drawer.component.SimpleDrawerBuilder;
 import raven.drawer.component.footer.SimpleFooterData;
@@ -20,95 +28,150 @@ import raven.swing.AvatarIcon;
 
 public class DrawerQL extends SimpleDrawerBuilder {
 
-	private HomeQL trangChinh;
+	private homeAll trangChinh;
 	private Main trangDangNhap;
-	public DrawerQL(HomeQL trangChinh, Main trangDangNhap) {
+
+	public DrawerQL(homeAll trangChinh, Main trangDangNhap) {
 		this.trangChinh = trangChinh;
 		this.trangDangNhap = trangDangNhap;
 	}
 
-	@Override
-	public SimpleFooterData getSimpleFooterData() {
-		return new SimpleFooterData().setTitle("Chào mừng");
+	public void showWelcomeMessage(String name) {
+		JOptionPane.showMessageDialog(trangChinh, "Chào mừng " + name, "Thông báo", JOptionPane.INFORMATION_MESSAGE);
 	}
 
 	@Override
 	public SimpleHeaderData getSimpleHeaderData() {
-		String hoTen = "Nguyễn Tân";
 		String chucVu = "Nhân viên quản lý";
-		return new SimpleHeaderData().setIcon(new AvatarIcon(getClass().getResource("avatar.jpg"), 120, 120, 1200))
-				.setTitle(hoTen).setDescription(chucVu);
+		return new SimpleHeaderData()
+				.setIcon(new AvatarIcon(getClass().getResource("/img/staffIcon.png"), 120, 120, 1200))
+				.setTitle("Nhà hàng Cerbus BBQ").setDescription(chucVu);
+	}
+
+	@Override
+	public SimpleFooterData getSimpleFooterData() {
+		Date currentTime = new Date();
+		// Định dạng ban đầu
+		
+		SimpleDateFormat formatter = new SimpleDateFormat("EEEE, dd/MM/yyyy" + " HH:mm              ");
+		String formattedTime = formatter.format(currentTime);
+		// Thay thế sang tiếng Việt
+		formattedTime = formattedTime.replace("Monday", "Thứ Hai").replace("Tuesday", "Thứ Ba")
+				.replace("Wednesday", "Thứ Tư").replace("Thursday", "Thứ Năm").replace("Friday", "Thứ Sáu")
+				.replace("Saturday", "Thứ Bảy").replace("Sunday", "Chủ Nhật");
+		return new SimpleFooterData().setTitle(formattedTime);
 	}
 
 	@Override
 	public SimpleMenuOption getSimpleMenuOption() {
-		String[][] menus = { { "~TRANG CHỦ~" }, { "Trang chủ" }, { "~BÀN~" }, { "Bàn", "Quản lý bàn" },
-				{ "~NHÂN VIÊN~" }, { "Nhân viên", "Quản lý nhân viên", "Tìm kiếm nhân viên" }, { "~MÓN ĂN~" },
-				{ "Món ăn", "Quản lý món ăn", "Tìm kiếm món ăn" },{"~THỐNG KÊ~"},{"Thống kê","Thống kê doanh thu","Thống kê khách hàng","Thống kê món ăn"}, { "~CÔNG CỤ~" },
-				{ "Công cụ", "Trợ giúp", "Cài đặt" }, { "~TÀI KHOẢN~" },
-				{ "Tài khoản","Quản lý tài khoản", "Thay đổi mật khẩu", "Đăng xuất", "Thoát" } };
-		String[] icons = { "home-svgrepo-com.svg", "table-svgrepo-com.svg", "customers-svgrepo-com.svg",
-				"bill-invoice-ui-svgrepo-com.svg", "tool-01-svgrepo-com.svg", "account-svgrepo-com.svg" };
+		String[][] menus = { { "~TRANG CHỦ~" }, { "Trang chủ" }, { "~BÀN~" }, { "Bàn", "Đặt bàn", "Quản lý bàn" },
+				{ "~KHÁCH HÀNG~" }, { "Khách hàng", "Quản lý khách hàng", "Tìm kiếm khách hàng" }, { "~NHÂN VIÊN~" },
+				{ "Nhân viên", "Quản lý nhân viên", "Tìm kiếm nhân viên" }, { "~HÓA ĐƠN~" },
+				{ "Hóa đơn", "Quản lý hóa đơn", "Tìm kiếm hóa đơn" }, { "~MÓN ĂN~" }, { "Món ăn", "Quản lý món ăn" },
+				{ "~THỐNG KÊ~" }, { "Thống kê" }, { "~KHUYẾN MÃI~" }, { "Khuyến mãi", "Quản lý khuyến mãi" },
+				{ "~CÔNG CỤ~" }, { "Công cụ", "Trợ giúp", "Cài đặt" }, { "~TÀI KHOẢN~" },
+				{ "Tài khoản", "Thông tin cá nhân", "Đăng xuất", "Thoát" } };
+		String[] icons = { "home-svgrepo-com.svg", "table-dinner-svgrepo-com.svg", "users-svgrepo-com.svg",
+				"staff-symbol-svgrepo-com.svg", "bill-svgrepo-com.svg", "fast-food-outline-svgrepo-com.svg","statistics-graph-stats-analytics-business-data-svgrepo-com.svg", "discount-percentage-svgrepo-com.svg",
+				"tools-svgrepo-com.svg", "account-svgrepo-com.svg" };
 
-		return new SimpleMenuOption().setMenus(menus).setIcons(icons).setBaseIconPath("img").setIconScale(0.04f)
+		return new SimpleMenuOption().setMenus(menus).setIcons(icons).setBaseIconPath("img").setIconScale(0.03f)
 				.addMenuEvent(new MenuEvent() {
 					@Override
 					public void selected(MenuAction action, int index, int subIndex) {
 						System.out.println("Menu selected: " + index + " " + subIndex);
-						// Trang chủ index=0
+						// Trang chủ
 						if (index == 0 && subIndex == 0) {
-							trangChinh.setPanelBody(new panelTrangChu());
+
+							panelTrangChu home = new panelTrangChu();
+							trangChinh.setPanelBody(home);
+							home.playVideo("video/2424767-uhd_3840_2160_24fps.mp4");
 						}
-						// Bàn idex=1
+						// Bàn
 						if (index == 1) {
-							if(subIndex==1) {
-								trangChinh.setPanelBody(new panelDatBan());
-							}
-							else if(subIndex==2) {
-								
-							}
-						}
-						// Nhân viên index=2
-						if(index==2) {
-							if(subIndex==1) {
-								trangChinh.setPanelBody(new panelQLNhanVien());
-							}
-							else if(subIndex==2) {
-
-							}
-						
-						}
-						// Hóa đơn index=3
-						if( index==3) {
-							if(subIndex==1) {
-								trangChinh.setPanelBody(new PanelQLyHD());
-							}
-							else if(subIndex==2) {
-								trangChinh.setPanelBody(new panelTimKiemHD());
-							}
-						}
-						// món ăn index=4
-						if(index==4) {
-							
-						}
-						// thống kê index=5
-						if(index==5) {
-							
-						}
-						// công cụ index=6
-						if(index==6) {
-							
-						}
-						//tài khoản index =7
-						if (index == 7) {
 							if (subIndex == 1) {
-
+								panelDatBan DatBan = new panelDatBan();
+								trangChinh.setPanelBody(DatBan);
+								DatBan.playVideo("video/88189-602915536_small.mp4");
 							} else if (subIndex == 2) {
-								trangChinh.setVisible(false); // Ẩn homeNV thay vì đóng
-                                trangDangNhap.switchToLogin(); // Chuyển về Main
-                                trangDangNhap.setVisible(true);
+
+							}
+						}
+						// Khách hàng
+						if (index == 2) {
+							if (subIndex == 1) {
+								panelQlyKhachhang KhachHang = new panelQlyKhachhang();
+								trangChinh.setPanelBody(KhachHang);
+							} else if (subIndex == 2) {
+								panelSearchKH TimKiemKH = new panelSearchKH();
+								trangChinh.setPanelBody(TimKiemKH);
+							}
+						}
+						// Nhân viên
+						if (index == 3) {
+							if(subIndex == 1) {
+								panelQLNhanVien NhanVien = new panelQLNhanVien();
+								trangChinh.setPanelBody(NhanVien);
+							}else if(subIndex == 2) {
 								
-							} else if(subIndex==3){
+							}
+						}
+						// Hóa đơn
+						if (index == 4) {
+							if(subIndex == 1) {
+								PanelQLyHD HoaDon = new PanelQLyHD();
+								trangChinh.setPanelBody(HoaDon);
+							}else if(subIndex == 2) {
+								panelTimKiemHD TimKiemHD = new panelTimKiemHD();
+								trangChinh.setPanelBody(TimKiemHD);
+							}
+						}
+						// Món ăn
+						if (index == 5) {
+							if(subIndex == 1) {
+								panelQlyMonAn MonAn = null;
+								try {
+									MonAn = new panelQlyMonAn();
+								} catch (Exception e) {
+									// TODO Auto-generated catch block
+									e.printStackTrace();
+								}
+								trangChinh.setPanelBody(MonAn);
+							}
+						}
+						
+						// Thống kê
+						if (index == 6) {
+							if (subIndex == 0) {
+								panelThongke ThongKe = new panelThongke();
+								trangChinh.setPanelBody(ThongKe);
+							}
+						}
+						// Khuyến mãi
+						if (index == 7) {
+
+						}
+						// Công cụ
+						if (index == 8) {
+
+						}
+						// Tài khoản
+						if (index == 9) {
+							if (subIndex == 1) {
+								panelQLyTK TaiKhoan = null;
+								try {
+									TaiKhoan = new panelQLyTK();
+								} catch (Exception e) {
+									// TODO Auto-generated catch block
+									e.printStackTrace();
+								}
+								trangChinh.setPanelBody(TaiKhoan);
+							} else if (subIndex == 2) {
+								trangChinh.setVisible(false);
+								trangDangNhap.switchToLogin();
+								trangDangNhap.setVisible(true);
+
+							} else if (subIndex == 3) {
 								System.exit(0);
 							}
 						}

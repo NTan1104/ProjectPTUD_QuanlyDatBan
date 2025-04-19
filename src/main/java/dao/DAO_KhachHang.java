@@ -2,6 +2,7 @@ package dao;
 
 import java.sql.CallableStatement;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
@@ -136,5 +137,23 @@ public class DAO_KhachHang extends BaseDAO {
             throw new Exception("Lỗi khi tìm kiếm khách hàng: " + e.getMessage());
         }
         return list;
+    }
+    
+    public boolean checkMaKHExists(String maKH) throws Exception {
+        String sql = "SELECT COUNT(*) FROM KhachHang WHERE MaKH = ?";
+        
+        try (Connection conn = getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            
+            pstmt.setString(1, maKH);
+            ResultSet rs = pstmt.executeQuery();
+            
+            if (rs.next()) {
+                return rs.getInt(1) > 0; // Trả về true nếu có ít nhất 1 bản ghi
+            }
+            return false;
+        } catch (Exception e) {
+            throw new Exception("Lỗi khi kiểm tra mã khách hàng: " + e.getMessage());
+        }
     }
 }
