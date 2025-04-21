@@ -187,7 +187,7 @@ public class panelTang1 extends JPanel {
 							CTPhieuDatBan ctpdb = CTPDB_DAO.getCTPDBByMa(pdb.getMaPDB());
 
 							if (kh != null && ctpdb != null) {
-								displayBanDetails(tenBan, status, kh.getMaKH(), kh.getTenKH(), kh.getSdt(),
+								displayBanDetails(tenBan, status, kh.getMaKH(), "Nguyen Tan", kh.getSdt(),
 										kh.getGioiTinh(), String.valueOf(ctpdb.getSoNguoi()));
 								panel_ChiTietBan.setVisible(true);
 							} else {
@@ -219,7 +219,7 @@ public class panelTang1 extends JPanel {
 						CTPDB_DAO = new DAO_CTPhieuDatBan();
 						CTPhieuDatBan CTPDB = CTPDB_DAO.getCTPDBByMa(maPDB);
 
-						displayBanDetails(tenBan, "ĐÃ ĐẶT", KH.getMaKH(), KH.getTenKH(), KH.getSdt(), KH.getGioiTinh(),
+						displayBanDetails(tenBan, "ĐÃ ĐẶT", KH.getMaKH(),"Nguyen Tan" , KH.getSdt(), KH.getGioiTinh(),
 								String.valueOf(CTPDB.getSoNguoi()));
 						panel_ChiTietBan.setVisible(true);
 					});
@@ -362,27 +362,26 @@ public class panelTang1 extends JPanel {
 		
 		System.out.println(maKH);
 		if (maKH != null) {
-			try {
-				hoaDon_DAO = new DAO_HoaDon();
-				String maHD = hoaDon_DAO.getMaHDByMaKHAndStatus(maKH, "Chưa thanh toán");
-				System.out.println(maHD);
-				if (maHD != null) {
-					CTHD_DAO = new DAO_CTHoaDon();
-					monAn_DAO = new DAO_MonAn();
-					List<CTHoaDon> dsachCTHD = CTHD_DAO.getCTHDByMaHD(maHD);
-					for (CTHoaDon row : dsachCTHD) {
-						String maMonAn = row.getMaMonAn(); 
-						int soLuongMon = row.getSoLuong();
-						MonAn monAn = monAn_DAO.getMonAnByMa(maMonAn);
-						if (monAn != null) {
-							double gia = monAn.getGia();
-							model.addRow(new Object[] { monAn.getTenMonAn(), soLuongMon, gia, soLuongMon * gia });
-						}
+			hoaDon_DAO = new DAO_HoaDon();
+			String maHD = hoaDon_DAO.getMaHDByMaKHAndStatus(maKH, "Chưa thanh toán");
+			System.out.println(maHD);
+			if (maHD != null) {
+				CTHD_DAO = new DAO_CTHoaDon();
+				monAn_DAO = new DAO_MonAn();
+				List<CTHoaDon> dsachCTHD = CTHD_DAO.getCTHDByMaHD(maHD);
+				for (CTHoaDon row : dsachCTHD) {
+					String maMonAn = row.getMaMonAn(); 
+					int soLuongMon = row.getSoLuong();
+					MonAn monAn = monAn_DAO.getMonAnByMa(maMonAn);
+					if (monAn != null) {
+						double gia = monAn.getGia();
+						model.addRow(new Object[] { 
+								monAn.getTenMonAn(), 
+								soLuongMon, 
+								gia, 
+								soLuongMon * gia });
 					}
 				}
-			} catch (SQLException ex) {
-				ex.printStackTrace();
-				JOptionPane.showMessageDialog(panelTang1.this, "Lỗi khi lấy chi tiết hóa đơn: " + ex.getMessage());
 			}
 		}
 
@@ -545,7 +544,7 @@ public class panelTang1 extends JPanel {
 			panelMenu.add(lblLoaiMon);
 
 			monAn_DAO = new DAO_MonAn();
-			List<MonAn> danhSachMonAn = monAn_DAO.getAllMonAns();
+			List<MonAn> danhSachMonAn = monAn_DAO.getAllMonAn();
 
 			comboLoaiMon = new JComboBox<String>();
 			comboLoaiMon.setBounds(150, 60, 200, 30);
@@ -586,7 +585,7 @@ public class panelTang1 extends JPanel {
 
 			updateMenuDisplay(tenBan, danhSachMonAn);
 		} else {
-			updateMenuDisplay(tenBan, monAn_DAO.getAllMonAns());
+			updateMenuDisplay(tenBan, monAn_DAO.getAllMonAn());
 		}
 
 		panel_Ban.setVisible(false);
@@ -798,7 +797,7 @@ public class panelTang1 extends JPanel {
 		}
 		txt_tongCong.setText(String.format("%.0f", tongCong));
 
-		double vatPercentage = 0.08; // Fixed 8% VAT
+		double vatPercentage = 0.08; 
 		double vat = tongCong * vatPercentage;
 		txt_VAT.setText(String.format("%.0f", vat));
 

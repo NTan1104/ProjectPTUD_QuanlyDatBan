@@ -23,11 +23,12 @@ CREATE TABLE PhuongThucThanhToan (
 CREATE TABLE KhuyenMai (
     MaKM VARCHAR(10) PRIMARY KEY,
     DieuKien NVARCHAR(255) NOT NULL,
-    Hansudung DATETIME,
+    Ngayketthuc DATETIME,
     Ngaybatdau DATETIME,
     PhanTramGiamGia DECIMAL(5, 2) NOT NULL,
     CONSTRAINT PhanTramGiamGia CHECK (PhanTramGiamGia >= 0 AND PhanTramGiamGia <= 100)
 );
+
 ALTER TABLE NhanVien
 ADD Email VARCHAR(50);
 CREATE TABLE NhanVien (
@@ -63,16 +64,15 @@ CREATE TABLE MonAn (
     GhiChu NVARCHAR(MAX),
     LoaiMonAn NVARCHAR(20)
 );
-
 CREATE TABLE ChiTietPhieuDatBan (
-    MaCTPDB VARCHAR(10) PRIMARY KEY,
+    MaPDB VARCHAR(10) NOT NULL,
     TimeNhanBan DATETIME,
     TimeTraBan DATETIME,
-    SoNguoi INT
+    SoNguoi INT,
+    FOREIGN KEY (MaPDB) REFERENCES PhieuDatBan(MaPDB)
 );
-
 -- Tạo các bảng có khóa ngoại sau
-CREATE TABLE TaiKhoan (
+CREATE TABLE TaiKhoan_Fake (
     MaNV VARCHAR(10) NOT NULL,
     TenDangNhap VARCHAR(10) PRIMARY KEY,
     MatKhau VARCHAR(20) NOT NULL,
@@ -81,15 +81,25 @@ CREATE TABLE TaiKhoan (
     FOREIGN KEY (MaNV) REFERENCES NhanVien(MaNV)
 );
 
+CREATE TABLE TaiKhoan (
+    MaNV VARCHAR(10) NOT NULL,
+    TenDangNhap VARCHAR(10) PRIMARY KEY,
+    MatKhau VARCHAR(20) NOT NULL,
+    GioVaoLam DATETIME NOT NULL,
+    GioNghi DATETIME NOT NULL,
+    SoGioLam FLOAT NOT NULL,
+    TrangThai NVARCHAR(50) NOT NULL,
+    CONSTRAINT TK_TrangThai CHECK (TrangThai IN (N'Online', N'Offline')),
+    FOREIGN KEY (MaNV) REFERENCES NhanVien(MaNV)
+);
+
 CREATE TABLE PhieuDatBan (
     MaPDB VARCHAR(10) PRIMARY KEY,
     MaKhachHang VARCHAR(10) NOT NULL,
     MaBan VARCHAR(10) NOT NULL,
-    MaCTPDB VARCHAR(10) NOT NULL,
     MaNV VARCHAR(10) NOT NULL,
     FOREIGN KEY (MaKhachHang) REFERENCES KhachHang(MaKH),
     FOREIGN KEY (MaBan) REFERENCES Ban(MaBan),
-    FOREIGN KEY (MaCTPDB) REFERENCES ChiTietPhieuDatBan(MaCTPDB),
     FOREIGN KEY (MaNV) REFERENCES NhanVien(MaNV)
 );
 
@@ -102,6 +112,7 @@ CREATE TABLE HoaDon (
     MaKM VARCHAR(10) NOT NULL,
     NgayLap DATETIME,
     NgayXuat DATETIME,
+	TrangThai NVARCHAR(50) NOT NULL,
     FOREIGN KEY (MaNV) REFERENCES NhanVien(MaNV),
     FOREIGN KEY (MaKH) REFERENCES KhachHang(MaKH),
     FOREIGN KEY (MaPTTT) REFERENCES PhuongThucThanhToan(MaPTTT),
@@ -110,7 +121,6 @@ CREATE TABLE HoaDon (
 );
 
 CREATE TABLE ChiTietHoaDon (
-    MaCTHD VARCHAR(10) PRIMARY KEY,
     MaHD VARCHAR(10) NOT NULL,
     MaMonAn VARCHAR(10) NOT NULL,
     SoLuong INT NOT NULL,
@@ -118,110 +128,499 @@ CREATE TABLE ChiTietHoaDon (
     FOREIGN KEY (MaHD) REFERENCES HoaDon(MaHD),
     FOREIGN KEY (MaMonAn) REFERENCES MonAn(MaMonAn)
 );
--- THÊM DỮ LIỆU
-INSERT INTO ThueVAT (MaVAT, PhanTramThue) VALUES
-('VAT01', 10.00),
-('VAT02', 8.00)
-INSERT INTO PhuongThucThanhToan (MaPTTT, PhuongThuc) VALUES
-('PTTT01', N'Tiền mặt'),
-('PTTT03', N'Chuyển khoản');
-INSERT INTO KhuyenMai (MaKM, DieuKien, Hansudung, Ngaybatdau, PhanTramGiamGia) VALUES
-('KM01', N'Giảm giá cho hóa đơn trên 500,000', '2025-12-31 23:59:59', '2025-04-01 00:00:00', 10.00),
-('KM02', N'Giảm giá cho khách hàng 1,000,000', '2025-06-30 23:59:59', '2025-04-01 00:00:00', 15.00)
-INSERT INTO KhachHang (MaKH, TenKH, SDT, GioiTinh) VALUES
-('KH001', N'Nguyễn Văn An', '0912345678', N'Nam'),
-('KH002', N'Trần Thị Bình', '0987654321', N'Nữ'),
-('KH003', N'Lê Minh Châu', '0901234567', N'Nữ');
-INSERT INTO NhanVien (MaNV, TenNV, SDT, GioiTinh, ChucVu, Tuoi, Hesoluong, LuongNV, LinkIMG) VALUES
-('NV001', N'Nguyễn Tân', '0935123456', N'Nam', N'Nhân viên quản lý', 21, 30000, 10000000, null),
-('NV002', N'Đỗ Đông Giang', '0978123456', N'Nam', N'Nhân viên quản lý', 21, 30000, 8000000, null),
-('NV003', N'Trần Minh Tín', '0967123456', N'Nam', N'Nhân viên quản lý', 21, 30000, 10000000, null);
-UPDATE NhanVien
-SET Email = 
-    CASE MaNV
-        WHEN 'NV001' THEN 'nguyen.tan@gmail.com'
-        WHEN 'NV002' THEN 'do.giang@gmail.com'
-        WHEN 'NV003' THEN 'tran.tin@gmail.com'
-        WHEN 'NV006' THEN 'nguyen.hung@gmail.com'
-        WHEN 'NV007' THEN 'tran.lan@gmail.com'
-        WHEN 'NV008' THEN 'le.tuan@gmail.com'
-        WHEN 'NV009' THEN 'pham.mai@gmail.com'
-        WHEN 'NV010' THEN 'hoang.nam@gmail.com'
+
+-- Stored Procedure SQL
+CREATE PROCEDURE ThemHoaDon
+    @MaNV VARCHAR(10),
+    @MaKH VARCHAR(10),
+    @MaPTTT VARCHAR(10),
+    @MaVAT VARCHAR(10),
+    @MaKM VARCHAR(10),
+    @NgayLap DATETIME,
+    @NgayXuat DATETIME,
+    @TrangThai NVARCHAR(50)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    DECLARE @NewMaHD NVARCHAR(10);
+    DECLARE @MaxMaHD NVARCHAR(10);
+    DECLARE @NextNumber INT;
+
+    -- Lấy mã hóa đơn lớn nhất hiện tại
+    SELECT @MaxMaHD = MAX(MaHD) FROM HoaDon;
+
+    IF @MaxMaHD IS NULL
+    BEGIN
+        -- Nếu chưa có hóa đơn nào, bắt đầu với HD000001
+        SET @NewMaHD = 'HD000001';
     END
-WHERE MaNV IN ('NV001', 'NV002', 'NV003', 'NV006', 'NV007', 'NV008', 'NV009', 'NV010');
-INSERT INTO NhanVien (MaNV, TenNV, SDT, GioiTinh, ChucVu, Tuoi, Hesoluong, LuongNV, LinkIMG) VALUES
-('NV006', N'Nguyễn Văn Hùng', '0986123456', N'Nam', N'Nhân viên lễ tân', 35, 20000, 8000000, null),
-('NV007', N'Trần Thị Lan', '0986123457', N'Nữ', N'Nhân viên lễ tân', 19, 20000, 8000000, null),
-('NV008', N'Lê Minh Tuấn', '0986123458', N'Nam', N'Nhân viên lễ tân', 22, 20000, 8000000, null),
-('NV009', N'Phạm Thị Mai', '0986123459', N'Nữ', N'Nhân viên lễ tân', 29, 20000, 8000000, null),
-('NV010', N'Hoàng Văn Nam', '0986123460', N'Nam', N'Nhân viên lễ tân', 24, 20000, 8000000, null);
+    ELSE
+    BEGIN
+        -- Trích xuất phần số, tăng thêm 1 và tạo mã hóa đơn mới
+        SET @NextNumber = CAST(SUBSTRING(@MaxMaHD, 3, LEN(@MaxMaHD) - 2) AS INT) + 1;
+        SET @NewMaHD = 'HD' + RIGHT('000000' + CAST(@NextNumber AS NVARCHAR(6)), 6);
+    END
 
-INSERT INTO TaiKhoan (MaNV, TenDangNhap, MatKhau, TrangThai) VALUES
-('NV001', 'NV001', 'password', N'Offline'),
-('NV002', 'NV002', 'password', N'Offline'),
-('NV003', 'NV003', 'password', N'Offline');
+    -- Thêm dữ liệu mới vào bảng HoaDon
+    INSERT INTO HoaDon (
+        MaHD, MaNV, MaKH, MaPTTT, MaVAT, MaKM, NgayLap, NgayXuat, TrangThai
+    )
+    VALUES (
+        @NewMaHD, @MaNV, @MaKH, @MaPTTT, @MaVAT, @MaKM, @NgayLap, @NgayXuat, @TrangThai
+    );
+END;
 
-INSERT INTO TaiKhoan (MaNV, TenDangNhap, MatKhau, TrangThai) VALUES
-('NV006', 'NV006', 'password', N'Offline'),
-('NV007', 'NV007', 'password', N'Offline'),
-('NV008', 'NV008', 'password', N'Offline'),
-('NV009', 'NV009', 'password', N'Offline'),
-('NV010', 'NV010', 'password', N'Offline');
-UPDATE TaiKhoan
-SET 
-    lockIn = 
-        CASE MaNV
-            WHEN 'NV001' THEN '2025-04-14 08:00:00'
-            WHEN 'NV002' THEN '2025-04-14 08:30:00'
-            WHEN 'NV003' THEN '2025-04-14 09:00:00'
-            WHEN 'NV006' THEN '2025-04-14 07:30:00'
-            WHEN 'NV007' THEN '2025-04-14 08:00:00'
-            WHEN 'NV008' THEN '2025-04-14 08:15:00'
-            WHEN 'NV009' THEN '2025-04-14 09:00:00'
-            WHEN 'NV010' THEN '2025-04-14 08:45:00'
-        END,
-    lockOut = 
-        CASE MaNV
-            WHEN 'NV001' THEN '2025-04-14 17:00:00'
-            WHEN 'NV002' THEN '2025-04-14 16:30:00'
-            WHEN 'NV003' THEN NULL -- Chưa ra ca
-            WHEN 'NV006' THEN '2025-04-14 16:00:00'
-            WHEN 'NV007' THEN '2025-04-14 17:00:00'
-            WHEN 'NV008' THEN '2025-04-14 16:45:00'
-            WHEN 'NV009' THEN NULL -- Chưa ra ca
-            WHEN 'NV010' THEN '2025-04-14 17:30:00'
-        END,
-    tongGioLam = 
-        CASE MaNV
-            WHEN 'NV001' THEN 9  -- 8:00 -> 17:00
-            WHEN 'NV002' THEN 8   -- 8:30 -> 16:30
-            WHEN 'NV003' THEN NULL  -- Chưa ra ca
-            WHEN 'NV006' THEN 8   -- 7:30 -> 16:00
-            WHEN 'NV007' THEN 9  -- 8:00 -> 17:00
-            WHEN 'NV008' THEN 8   -- 8:15 -> 16:45
-            WHEN 'NV009' THEN NULL  -- Chưa ra ca
-            WHEN 'NV010' THEN 8.75  -- 8:45 -> 17:30
-        END
-WHERE MaNV IN ('NV001', 'NV002', 'NV003', 'NV006', 'NV007', 'NV008', 'NV009', 'NV010');
-UPDATE Ban
-SET TrangThai = UPPER(TrangThai);
-UPDATE Ban
-SET TENBAN = 
-    CASE MaBan
-        WHEN 'B001' THEN N'BÀN 1'
-        WHEN 'B002' THEN N'BÀN 2'
-        WHEN 'B003' THEN N'BÀN 3'
-        WHEN 'B004' THEN N'BÀN 4'
-        WHEN 'B005' THEN N'BÀN 5'
-        WHEN 'B006' THEN N'BÀN 6'
-    END;
-INSERT INTO Ban (MaBan, TrangThai, Tang, SoCho, GhiChu) VALUES
-('B001', N'Còn Trống', 1, 4, N'Không có'),
-('B002', N'Còn Trống', 1, 4, N'Không có'),
-('B003', N'Còn Trống', 1, 4, N'Không có'),
-('B004', N'Còn Trống', 1, 4, N'Không có'),
-('B005', N'Còn Trống', 1, 4, N'Không có'),
-('B006', N'Còn Trống', 1, 4, N'Không có');
 
-SELECT * FROM TaiKhoan
-select * from NhanVien
+--KHuyến Mãi
+CREATE PROCEDURE sp_AddPromotion
+    @PromotionId VARCHAR(10),
+    @Condition NVARCHAR(255),
+    @StartDate DATETIME,
+    @EndDate DATETIME,
+    @DiscountPercentage Decimal(5,2)
+AS
+BEGIN
+    INSERT INTO KhuyenMai (MaKM, DieuKien, NgayBatDau, NgayKetThuc, PhanTramGiamGia)
+    VALUES (@PromotionId, @Condition, @StartDate, @EndDate, @DiscountPercentage);
+END;
+
+-- 2. Update promotion
+CREATE PROCEDURE sp_UpdatePromotion
+    @PromotionId VARCHAR(10),
+    @Condition NVARCHAR(255),
+    @StartDate DATETIME,
+    @EndDate DATETIME,
+    @DiscountPercentage Decimal(5,2)
+AS
+BEGIN
+    UPDATE KhuyenMai
+    SET DieuKien = @Condition,
+        NgayBatDau = @StartDate,
+        NgayKetThuc = @EndDate,
+        PhanTramGiamGia = @DiscountPercentage
+    WHERE MaKM = @PromotionId;
+END;
+
+-- 3. Delete promotion
+CREATE PROCEDURE sp_DeletePromotion
+    @PromotionId VARCHAR(10)
+AS
+BEGIN
+    DELETE FROM KhuyenMai
+    WHERE MaKM = @PromotionId;
+END;
+
+-- 4. Get list of promotions
+CREATE PROCEDURE sp_GetAllPromotions
+AS
+BEGIN
+    SELECT * FROM KhuyenMai;
+END;
+
+-- 5. Get promotion by ID
+
+CREATE PROCEDURE sp_GetPromotionById
+    @PromotionId VARCHAR(10)
+AS
+BEGIN
+    SELECT MaKM ,DieuKien ,Ngayketthuc ,Ngaybatdau ,PhanTramGiamGia
+	FROM KhuyenMai
+    WHERE MaKM LIKE  @PromotionId;
+END;
+
+--Nhân Viên
+
+go
+
+CREATE PROCEDURE GetAllNhanVien
+
+AS
+BEGIN	
+
+    SELECT MaNV, TenNV, SDT, GioiTinh, ChucVu, Tuoi, Hesoluong , LuongNV , LinkIMG , Email FROM NhanVien;
+END;
+CREATE PROCEDURE InsertNhanVien (
+    @MaNV NVARCHAR(10),
+    @TenNV NVARCHAR(50),
+    @SDT NVARCHAR(15),
+    @GioiTinh NVARCHAR(10),
+    @ChucVu NVARCHAR(50),
+    @Tuoi INT,	
+    @Hesoluong FLOAT,
+    @LuongNV FLOAT,
+    @LinkIMG NVARCHAR(255),
+    @Email NVARCHAR(50)
+)
+AS
+BEGIN
+    INSERT INTO NhanVien(MaNV, TenNV, SDT, GioiTinh, ChucVu, Tuoi, Hesoluong, LuongNV, LinkIMG, Email)
+    VALUES(@MaNV, @TenNV, @SDT, @GioiTinh, @ChucVu, @Tuoi, @Hesoluong, @LuongNV, @LinkIMG, @Email);
+END;
+GO
+
+CREATE PROCEDURE UpdateNhanVien (
+    @TenNV NVARCHAR(50),
+    @SDT NVARCHAR(15),
+    @GioiTinh NVARCHAR(10),
+    @ChucVu NVARCHAR(50),
+    @Tuoi INT,
+    @Hesoluong FLOAT,
+    @LuongNV FLOAT,
+    @LinkIMG NVARCHAR(255),
+    @Email NVARCHAR(50),
+    @MaNV NVARCHAR(10)
+)
+AS
+BEGIN
+    UPDATE NhanVien
+    SET TenNV = @TenNV,
+        SDT = @SDT,
+        GioiTinh = @GioiTinh,
+        ChucVu = @ChucVu,
+        Tuoi = @Tuoi,
+        Hesoluong = @Hesoluong,
+        LuongNV = @LuongNV,
+        LinkIMG = @LinkIMG,
+        Email = @Email
+    WHERE MaNV = @MaNV;
+END;
+GO
+
+GO
+
+-- Stored procedure để xóa một nhân viên theo mã NV
+CREATE PROCEDURE DeleteNhanVien (
+    @MaNV NVARCHAR(10)
+)
+AS
+BEGIN
+    DELETE FROM NhanVien WHERE MaNV = @MaNV;
+END;
+GO
+
+
+CREATE PROCEDURE SearchNhanVien
+    @Keyword NVARCHAR(50)
+AS
+BEGIN
+    SELECT MaNV, TenNV, SDT, GioiTinh, ChucVu, Tuoi, Hesoluong, LuongNV, LinkIMG, Email
+    FROM NhanVien
+    WHERE MaNV LIKE  @Keyword 
+       OR TenNV LIKE  @Keyword 
+       OR SDT LIKE  @Keyword 
+       OR Email LIKE  @Keyword ;
+END;
+GO
+
+---HÓA ĐƠN TÍN
+
+CREATE PROCEDURE sp_GetAllHoaDon
+AS
+BEGIN
+    SELECT 
+        hd.MaHD, 
+        hd.MaNV, 
+        hd.MaKH, 
+        hd.MaPTTT, 
+        hd.MaVAT, 
+        hd.MaKM, 
+        hd.NgayLap, 
+        hd.NgayXuat, 
+        hd.TrangThai,
+        b.MaBan,
+        kh.SDT,
+        COALESCE(SUM(ct.SoLuong * ct.DonGia), 0) AS TongTien
+    FROM HoaDon hd
+    LEFT JOIN KhachHang kh ON hd.MaKH = kh.MaKH
+    LEFT JOIN ChiTietHoaDon ct ON hd.MaHD = ct.MaHD
+    LEFT JOIN ChiTietBan cb ON hd.MaHD = cb.MaHD
+    LEFT JOIN Ban b ON cb.MaBan = b.MaBan
+    GROUP BY 
+        hd.MaHD, hd.MaNV, hd.MaKH, hd.MaPTTT, hd.MaVAT, hd.MaKM, 
+        hd.NgayLap, hd.NgayXuat, hd.TrangThai, b.MaBan, kh.SDT
+    ORDER BY 
+        hd.NgayLap DESC;
+END;
+
+CREATE PROCEDURE sp_SearchHoaDon
+    @MaHD VARCHAR(10) = NULL,
+    @MaKH VARCHAR(10) = NULL,
+    @MaBan VARCHAR(10) = NULL,
+    @SDT VARCHAR(15) = NULL,
+    @TrangThai NVARCHAR(50) = NULL,
+    @StartDate DATETIME = NULL,
+    @EndDate DATETIME = NULL,
+    @SortByGia VARCHAR(10) = NULL
+AS
+BEGIN
+    SELECT 
+        hd.MaHD, 
+        hd.MaNV, 
+        hd.MaKH, 
+        hd.MaPTTT, 
+        hd.MaVAT, 
+        hd.MaKM, 
+        hd.NgayLap, 
+        hd.NgayXuat, 
+        hd.TrangThai,
+        b.MaBan,
+        kh.SDT,
+        SUM(ct.SoLuong * ct.DonGia) AS TongTien
+    FROM HoaDon hd
+    LEFT JOIN KhachHang kh ON hd.MaKH = kh.MaKH
+    LEFT JOIN ChiTietHoaDon ct ON hd.MaHD = ct.MaHD
+    LEFT JOIN ChiTietBan cb ON hd.MaHD = cb.MaHD
+    LEFT JOIN Ban b ON cb.MaBan = b.MaBan
+    WHERE 
+        (@MaHD IS NULL OR hd.MaHD LIKE '%' + @MaHD + '%')
+        AND (@MaKH IS NULL OR hd.MaKH LIKE '%' + @MaKH + '%')
+        AND (@MaBan IS NULL OR b.MaBan LIKE '%' + @MaBan + '%')
+        AND (@SDT IS NULL OR kh.SDT LIKE '%' + @SDT + '%')
+        AND (@TrangThai IS NULL OR @TrangThai = 'Tất cả' OR hd.TrangThai = @TrangThai)
+        AND (@StartDate IS NULL OR hd.NgayLap >= @StartDate)
+        AND (@EndDate IS NULL OR hd.NgayLap <= @EndDate)
+    GROUP BY 
+        hd.MaHD, hd.MaNV, hd.MaKH, hd.MaPTTT, hd.MaVAT, hd.MaKM, 
+        hd.NgayLap, hd.NgayXuat, hd.TrangThai, b.MaBan, kh.SDT
+    ORDER BY 
+        CASE 
+            WHEN @SortByGia = 'DESC' THEN SUM(ct.SoLuong * ct.DonGia)
+        END DESC,
+        CASE 
+            WHEN @SortByGia = 'ASC' THEN SUM(ct.SoLuong * ct.DonGia)
+        END ASC,
+        hd.NgayLap DESC; -- Default sort by NgayLap if SortByGia is not specified
+END;
+
+---Mon An
+CREATE PROCEDURE GetAllMonAn
+AS
+BEGIN
+    SELECT MaMonAn, TenMonAn, Gia, GhiChu, LoaiMonAn, DuongDanHinhAnh
+    FROM MonAn;
+END;
+
+CREATE PROCEDURE GetMonAnByMa
+    @MaMonAn VARCHAR(10)
+AS
+BEGIN
+    SELECT MaMonAn, TenMonAn, Gia, GhiChu, LoaiMonAn, DuongDanHinhAnh
+    FROM MonAn
+    WHERE MaMonAn = @MaMonAn;
+END;
+
+CREATE PROCEDURE AddMonAn
+    @MaMonAn VARCHAR(10),
+    @TenMonAn NVARCHAR(50),
+    @Gia FLOAT,
+    @GhiChu NVARCHAR(MAX),
+    @LoaiMonAn NVARCHAR(20),
+    @DuongDanHinhAnh VARCHAR(255)
+AS
+BEGIN
+    INSERT INTO MonAn (MaMonAn, TenMonAn, Gia, GhiChu, LoaiMonAn, DuongDanHinhAnh)
+    VALUES (@MaMonAn, @TenMonAn, @Gia, @GhiChu, @LoaiMonAn, @DuongDanHinhAnh);
+END;
+
+CREATE PROCEDURE UpdateMonAn
+    @MaMonAn VARCHAR(10),
+    @TenMonAn NVARCHAR(50),
+    @Gia FLOAT,
+    @GhiChu NVARCHAR(MAX),
+    @LoaiMonAn NVARCHAR(20),
+    @DuongDanHinhAnh VARCHAR(255)
+AS
+BEGIN
+    UPDATE MonAn
+    SET TenMonAn = @TenMonAn,
+        Gia = @Gia,
+        GhiChu = @GhiChu,
+        LoaiMonAn = @LoaiMonAn,
+        DuongDanHinhAnh = @DuongDanHinhAnh
+    WHERE MaMonAn = @MaMonAn;
+END;
+
+CREATE PROCEDURE DeleteMonAn
+    @MaMonAn VARCHAR(10)
+AS
+BEGIN
+    DELETE FROM MonAn
+    WHERE MaMonAn = @MaMonAn;
+END;
+
+CREATE PROCEDURE SearchMonAn
+    @SearchValue NVARCHAR(50),
+    @SearchBy NVARCHAR(20) -- 'MaMonAn' ho?c 'TenMonAn'
+AS
+BEGIN
+    IF @SearchBy = 'MaMonAn'
+    BEGIN
+        SELECT MaMonAn, TenMonAn, Gia, GhiChu, LoaiMonAn, DuongDanHinhAnh
+        FROM MonAn
+        WHERE MaMonAn LIKE '%' + @SearchValue + '%';
+    END
+    ELSE IF @SearchBy = 'TenMonAn'
+    BEGIN
+        SELECT MaMonAn, TenMonAn, Gia, GhiChu, LoaiMonAn, DuongDanHinhAnh
+        FROM MonAn
+        WHERE TenMonAn LIKE '%' + @SearchValue + '%';
+    END
+    ELSE
+    BEGIN
+        SELECT MaMonAn, TenMonAn, Gia, GhiChu, LoaiMonAn, DuongDanHinhAnh
+        FROM MonAn;
+    END
+END;
+
+CREATE PROCEDURE FilterMonAnByLoai
+    @LoaiMonAn NVARCHAR(20)
+AS
+BEGIN
+    IF @LoaiMonAn = 'Tất cả'
+    BEGIN
+        SELECT MaMonAn, TenMonAn, Gia, GhiChu, LoaiMonAn, DuongDanHinhAnh
+        FROM MonAn;
+    END
+    ELSE
+    BEGIN
+        SELECT MaMonAn, TenMonAn, Gia, GhiChu, LoaiMonAn, DuongDanHinhAnh
+        FROM MonAn
+        WHERE LoaiMonAn = @LoaiMonAn;
+    END
+END;
+
+
+--Khach Hang
+CREATE PROCEDURE sp_GetAllKhachHang
+AS
+BEGIN
+    SELECT * FROM KhachHang;
+END;
+GO
+
+-- 2. Stored Procedure để thêm khách hàng
+CREATE PROCEDURE sp_AddKhachHang
+    @MaKH VARCHAR(10),
+    @TenKH NVARCHAR(50),
+    @SDT VARCHAR(11),
+    @GioiTinh NVARCHAR(10)
+AS
+BEGIN
+    INSERT INTO KhachHang (MaKH, TenKH, SDT, GioiTinh)
+    VALUES (@MaKH, @TenKH, @SDT, @GioiTinh);
+END;
+GO
+
+-- 3. Stored Procedure để cập nhật khách hàng
+CREATE PROCEDURE sp_UpdateKhachHang
+    @MaKH VARCHAR(10),
+    @TenKH NVARCHAR(50),
+    @SDT VARCHAR(11),
+    @GioiTinh NVARCHAR(10)
+AS
+BEGIN
+    UPDATE KhachHang
+    SET TenKH = @TenKH, SDT = @SDT, GioiTinh = @GioiTinh
+    WHERE MaKH = @MaKH;
+END;
+GO
+
+-- 4. Stored Procedure để xóa khách hàng
+CREATE PROCEDURE sp_DeleteKhachHang
+    @MaKH VARCHAR(10)
+AS
+BEGIN
+    DELETE FROM KhachHang
+    WHERE MaKH = @MaKH;
+END;
+GO
+
+-- 5. Stored Procedure để lấy khách hàng theo mã
+CREATE PROCEDURE sp_GetKhachHangByMa
+    @MaKH VARCHAR(10)
+AS
+BEGIN
+    SELECT * FROM KhachHang
+    WHERE MaKH = @MaKH;
+END;
+GO
+
+CREATE PROCEDURE sp_SearchKhachHang
+    @Query NVARCHAR(50),
+    @Criteria NVARCHAR(20)
+AS
+BEGIN
+    IF @Criteria = 'Mã khách hàng'
+        SELECT * FROM KhachHang WHERE MaKH = @Query;
+    ELSE IF @Criteria = 'Tên khách hàng'
+        SELECT * FROM KhachHang WHERE TenKH LIKE '%' + @Query + '%';
+    ELSE IF @Criteria = 'Số điện thoại'
+        SELECT * FROM KhachHang WHERE SDT LIKE '%' + @Query + '%';
+END;
+GO
+
+
+CREATE PROCEDURE sp_GetAllTaiKhoan
+AS
+BEGIN
+    SELECT tk.MaNV, tk.TenDangNhap, tk.MatKhau, tk.TrangThai, tk.GioVaoLam, tk.GioNghi, tk.SoGioLam,
+           nv.TenNV, nv.SDT, nv.GioiTinh, nv.ChucVu, nv.Tuoi, nv.Hesoluong, nv.LuongNV, nv.LinkIMG, nv.Email
+    FROM TaiKhoan tk
+    JOIN NhanVien nv ON tk.MaNV = nv.MaNV;
+END;
+
+
+SELECT ROUTINE_NAME, ROUTINE_TYPE, CREATED, LAST_ALTERED
+FROM information_schema.ROUTINES
+DROP PROCEDURE IF EXISTS themKH;
+SELECT * FROM NhanVien
+select * from TaiKhoan
+select * from Ban	
+select * from ThueVAT
+select * from KhuyenMai
+select * from KhachHang
+select * from HoaDon
+select * from PhuongThucThanhToan
+select * from ThueVAT
+select * from KhuyenMai
+select * from MonAn
+select * from ChiTietHoaDon
+select * from PhieuDatBan
+select * from ChiTietPhieuDatBan
+SELECT * FROM Ban WHERE TenBan = 'BÀN 1'
+SELECT * FROM PhieuDatBan
+SELECT MaPDB FROM PhieuDatBan ORDER BY MaPDB DESC
+
+SELECT TOP 1 P.MaPDB 
+FROM PhieuDatBan P
+JOIN ChiTietPhieuDatBan C ON P.MaPDB = C.MaPDB
+WHERE MaBan = 'B001'
+ORDER BY C.TimeNhanBan DESC;
+
+SELECT * FROM PhieuDatBan where MaBan = 'B001'
+SELECT TOP 1 * FROM PhieuDatBan WHERE MaBan = 'B001' ORDER BY MaPDB DESC
+SELECT MaMonAn, SoLuong, DonGia FROM ChiTietHoaDon WHERE MaHD = 'HD000005'
+ALTER TABLE ChiTietPhieuDatBan
+ADD CONSTRAINT FK_PhieuDatBan
+FOREIGN KEY (MaPDB) REFERENCES PhieuDatBan(MaPDB)
+ON DELETE CASCADE;
+
+SELECT *
+FROM sys.database_permissions
+WHERE class_desc = 'OBJECT_OR_COLUMN' AND major_id = OBJECT_ID('HoaDon');
+
+DELETE FROM ChiTietHoaDon WHERE MaHD = 'HD000001';
+DELETE FROM HoaDon WHERE MaHD = 'HD000001';
+
+delete from KhuyenMai where MaKM = 'KM01'
+
+SELECT * FROM MonAn WHERE MaMonAn = 'MA001'
+SELECT TOP 1 * FROM PhieuDatBan WHERE MaBan = 'B001' ORDER BY MaPDB DESC
+SELECT MaHD FROM HoaDon WHERE MaKH = 'KH003' AND TrangThai = N'Chưa thanh toán'
+SELECT * FROM ChiTietHoaDon WHERE MaHD = 'HD000001'
+SELECT MaKM FROM KhuyenMai WHERE MaKM = 'KM01'
+
+
+
+

@@ -11,7 +11,12 @@ import gui.panelForm.panelDatBan;
 import gui.panelForm.panelKhuyenMai;
 import gui.panelForm.panelPhieuDatBan;
 import gui.panelForm.panelQLNhanVien;
+import gui.panelForm.panelQLyTK;
+import gui.panelForm.panelQlyKhachhang;
+import gui.panelForm.panelQlyMonAn;
+import gui.panelForm.panelSearchKH;
 import gui.panelForm.panelTKNhanVien;
+import gui.panelForm.panelThongke;
 import gui.panelForm.panelTrangChu;
 import raven.drawer.component.SimpleDrawerBuilder;
 import raven.drawer.component.footer.SimpleFooterData;
@@ -65,7 +70,7 @@ public class DrawerQL extends SimpleDrawerBuilder {
 				{ "Hóa đơn", "Quản lý hóa đơn", "Tìm kiếm hóa đơn" }, { "~MÓN ĂN~" }, { "Món ăn", "Quản lý món ăn" },
 				{ "~THỐNG KÊ~" }, { "Thống kê" }, { "~KHUYẾN MÃI~" }, { "Khuyến mãi", "Quản lý khuyến mãi" },
 				{ "~CÔNG CỤ~" }, { "Công cụ", "Trợ giúp", "Cài đặt" }, { "~TÀI KHOẢN~" },
-				{ "Tài khoản", "Thông tin cá nhân", "Đăng xuất", "Thoát" } };
+				{ "Tài khoản", "Quản lý tài khoản", "Đăng xuất", "Thoát" } };
 		String[] icons = { "home-svgrepo-com.svg", "table-dinner-svgrepo-com.svg", "users-svgrepo-com.svg",
 				"staff-symbol-svgrepo-com.svg", "bill-svgrepo-com.svg", "fast-food-outline-svgrepo-com.svg",
 				"statistics-graph-stats-analytics-business-data-svgrepo-com.svg", "discount-percentage-svgrepo-com.svg",
@@ -96,8 +101,11 @@ public class DrawerQL extends SimpleDrawerBuilder {
 						// Khách hàng
 						if (index == 2) {
 							if (subIndex == 1) {
+								panelQlyKhachhang KhachHang = new panelQlyKhachhang();
+								trangChinh.setPanelBody(KhachHang);
 							} else if (subIndex == 2) {
-
+								panelSearchKH TimKiemKH = new panelSearchKH();
+								trangChinh.setPanelBody(TimKiemKH);
 							}
 						}
 						// Nhân viên
@@ -117,11 +125,22 @@ public class DrawerQL extends SimpleDrawerBuilder {
 						}
 						// Món ăn
 						if (index == 5) {
+							if(subIndex == 1) {
+								panelQlyMonAn MonAn = null;
+								try {
+									MonAn = new panelQlyMonAn();
+								} catch (Exception e) {
+									// TODO Auto-generated catch block
+									e.printStackTrace();
+								}
+								trangChinh.setPanelBody(MonAn);
+							}
 						}
 						// Thống kê
 						if (index == 6) {
 							if (subIndex == 0) {
-
+								panelThongke ThongKe = new panelThongke();
+								trangChinh.setPanelBody(ThongKe);
 							}
 						}
 						// Khuyến mãi
@@ -138,6 +157,14 @@ public class DrawerQL extends SimpleDrawerBuilder {
 						// Tài khoản
 						if (index == 9) {
 							if (subIndex == 1) {
+								panelQLyTK TaiKhoan = null;
+								try {
+									TaiKhoan = new panelQLyTK();
+								} catch (Exception e) {
+									// TODO Auto-generated catch block
+									e.printStackTrace();
+								}
+								trangChinh.setPanelBody(TaiKhoan);
 							} else if (subIndex == 2) {
 								trangChinh.setVisible(false);
 								trangDangNhap.switchToLogin();
