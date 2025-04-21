@@ -10,7 +10,10 @@ public class MonAn implements java.io.Serializable {
     private String ghiChu;
     private String loaiMonAn;
     private String duongDanHinhAnh;
-
+    public MonAn() {
+    	
+    }
+ 
     // Constructor
     public MonAn(String maMonAn, String tenMonAn, float gia, String ghiChu, String loaiMonAn, String duongDanHinhAnh) {
         this.maMonAn = maMonAn;

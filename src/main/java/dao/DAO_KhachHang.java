@@ -1,7 +1,7 @@
 package dao;
 
 import java.sql.CallableStatement;
-import java.sql.Connection;
+import java.sql.Connection;    
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
@@ -11,15 +11,15 @@ import connectDatabase.BaseDAO;
 import entity.KhachHang;
 
 public class DAO_KhachHang extends BaseDAO {
-    
+
     public List<KhachHang> getAllKhachHang() throws Exception {
         List<KhachHang> list = new ArrayList<>();
         String sql = "{CALL sp_GetAllKhachHang}";
-        
+
         try (Connection conn = getConnection();
              CallableStatement cstmt = conn.prepareCall(sql);
              ResultSet rs = cstmt.executeQuery()) {
-            
+
             while (rs.next()) {
                 KhachHang kh = new KhachHang();
                 kh.setMaKH(rs.getString("MaKH"));
@@ -33,7 +33,7 @@ public class DAO_KhachHang extends BaseDAO {
         }
         return list;
     }
-    
+
     public void addKhachHang(KhachHang kh) throws Exception {
         String sql = "{CALL sp_AddKhachHang(?, ?, ?, ?)}";
         
@@ -73,7 +73,7 @@ public class DAO_KhachHang extends BaseDAO {
             throw new Exception("Lỗi khi cập nhật khách hàng: " + e.getMessage());
         }
     }
-    
+
     public void deleteKhachHang(String maKH) throws Exception {
         String sql = "{CALL sp_DeleteKhachHang(?)}";
         
@@ -90,7 +90,7 @@ public class DAO_KhachHang extends BaseDAO {
             throw new Exception("Lỗi khi xóa khách hàng: " + e.getMessage());
         }
     }
-    
+
     public KhachHang getKhachHangByMa(String maKH) throws Exception {
         String sql = "{CALL sp_GetKhachHangByMa(?)}";
         KhachHang kh = null;
@@ -113,7 +113,7 @@ public class DAO_KhachHang extends BaseDAO {
         }
         return kh;
     }
-    
+
     public List<KhachHang> searchKhachHang(String query, String criteria) throws Exception {
         List<KhachHang> list = new ArrayList<>();
         String sql = "{CALL sp_SearchKhachHang(?, ?)}";

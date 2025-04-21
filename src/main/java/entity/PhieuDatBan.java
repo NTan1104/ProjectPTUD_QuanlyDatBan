@@ -2,40 +2,43 @@ package entity;
 
 public class PhieuDatBan {
     private String maPDB;
-    private KhachHang khachHang;
-    private Ban Ban;
-    private CTPhieuDatBan CTPDB;
-    private NhanVien nhanVien;
+    private String maKH;
+    private String maBan;
+    private String maNV;
+    public PhieuDatBan() {
+    	
+    }
+    public PhieuDatBan(String maPDB, String maKH, String maBan, String maNV) {
+    	this.maPDB = maPDB;
+    	this.maKH = maKH;
+    	this.maBan = maBan;
+    	this.maNV = maNV;
+    }
 	public String getMaPDB() {
 		return maPDB;
 	}
 	public void setMaPDB(String maPDB) {
 		this.maPDB = maPDB;
 	}
-	public KhachHang getKhachHang() {
-		return khachHang;
+	public String getMaKH() {
+		return maKH;
 	}
-	public void setKhachHang(KhachHang khachHang) {
-		this.khachHang = khachHang;
+	public void setMaKH(String maKH) {
+		this.maKH = maKH;
 	}
-	public Ban getBan() {
-		return Ban;
+	public String getMaBan() {
+		return maBan;
 	}
-	public void setBan(Ban ban) {
-		Ban = ban;
+	public void setMaBan(String maBan) {
+		this.maBan = maBan;
 	}
-	public CTPhieuDatBan getCTPDB() {
-		return CTPDB;
+	public String getMaNV() {
+		return maNV;
 	}
-	public void setCTPDB(CTPhieuDatBan cTPDB) {
-		CTPDB = cTPDB;
+	public void setMaNV(String maNV) {
+		this.maNV = maNV;
 	}
-	public NhanVien getNhanVien() {
-		return nhanVien;
-	}
-	public void setNhanVien(NhanVien nhanVien) {
-		this.nhanVien = nhanVien;
-	}
+    
 
 
 }

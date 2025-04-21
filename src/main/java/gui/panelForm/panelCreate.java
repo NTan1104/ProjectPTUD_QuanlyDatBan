@@ -5,6 +5,8 @@ import javax.swing.*;
 import com.formdev.flatlaf.FlatIntelliJLaf;
 import com.formdev.flatlaf.FlatLaf;
 import com.formdev.flatlaf.fonts.roboto.FlatRobotoFont;
+
+import dao.DAO_KhachHang;
 import entity.KhachHang;
 import javax.swing.GroupLayout.Alignment;
 import javax.swing.LayoutStyle.ComponentPlacement;
@@ -18,6 +20,7 @@ public class panelCreate extends JPanel {
     private JTextField txtkh;
     private JTextField txtsdt;
     private JComboBox<String> combogt;
+    private DAO_KhachHang KH_DAO;
 
     public panelCreate() {
         initComponents();
@@ -29,8 +32,12 @@ public class panelCreate extends JPanel {
         FlatIntelliJLaf.setup();
         UIManager.put("defaultFont", new Font(FlatRobotoFont.FAMILY, Font.PLAIN, 13));
 
+        KH_DAO = new DAO_KhachHang();
+        String maKH = KH_DAO.getNextMaKH(); // Lấy mã khách hàng tiếp theo
         jLabelid = new JLabel("Mã khách hàng");
         txtid = new JTextField();
+        txtid.setText(maKH);
+        txtid.setEditable(false); // Đảm bảo mã khách hàng không thể chỉnh sửa
 
         jLabelkh = new JLabel("Tên khách hàng");
         txtkh = new JTextField();
@@ -93,30 +100,19 @@ public class panelCreate extends JPanel {
         String sdt = txtsdt.getText().trim();
         String gioiTinh = (String) combogt.getSelectedItem();
 
-        if (maKH.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Vui lòng nhập mã khách hàng", "Lỗi", JOptionPane.ERROR_MESSAGE);
-            txtid.requestFocusInWindow();
+        // Kiểm tra nếu thông tin chưa đủ
+        if (maKH.isEmpty() || tenKH.isEmpty() || sdt.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Vui lòng điền đầy đủ thông tin!", "Lỗi", JOptionPane.ERROR_MESSAGE);
             return null;
         }
-        
-        if(!maKH.matches("^KH\\d{3}")) {
-        	JOptionPane.showMessageDialog(this, "Vui lòng nhập theo mẫu KH theo sau là 3 chữ số", "Lỗi", JOptionPane.ERROR_MESSAGE);
-        	txtid.requestFocusInWindow();
+
+        // Kiểm tra định dạng mã khách hàng
+        if (!maKH.matches("^KH\\d{3}")) {
+            JOptionPane.showMessageDialog(this, "Vui lòng nhập mã khách hàng theo mẫu: KHxxx", "Lỗi", JOptionPane.ERROR_MESSAGE);
             return null;
         }
-        
-        if (tenKH.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Vui lòng nhập tên khách hàng", "Lỗi", JOptionPane.ERROR_MESSAGE);
-            txtkh.requestFocusInWindow();
-            return null;
-        }
-        
-        if(sdt.isEmpty()) {
-        	JOptionPane.showMessageDialog(this, "Vui lòng nhập tên khách hàng", "Lỗi", JOptionPane.ERROR_MESSAGE);
-        	txtsdt.requestFocusInWindow();
-            return null;
-        }
-        
+
+        // Kiểm tra định dạng số điện thoại
         if (!sdt.matches("\\d{10,11}")) {
             JOptionPane.showMessageDialog(this, "Số điện thoại phải có 10-11 chữ số!", "Lỗi", JOptionPane.ERROR_MESSAGE);
             return null;
@@ -125,12 +121,11 @@ public class panelCreate extends JPanel {
         return new KhachHang(maKH, tenKH, sdt, gioiTinh);
     }
 
-
     public void setData(KhachHang kh) {
         txtid.setText(kh.getMaKH());
         txtkh.setText(kh.getTenKH());
         txtsdt.setText(kh.getSdt());
         combogt.setSelectedItem(kh.getGioiTinh());
-        txtid.setEditable(false); 
+        txtid.setEditable(false); // Mã khách hàng không thể sửa
     }
 }

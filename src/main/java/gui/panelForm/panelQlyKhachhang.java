@@ -45,11 +45,11 @@ public class panelQlyKhachhang extends JPanel {
 
     public panelQlyKhachhang() {
         setSize(1535, 850);
-        dao = new DAO_KhachHang(); // Khởi tạo DAO
+        dao = new DAO_KhachHang();
         initComponents();
         init();
         try {
-            loadData(); // Tải dữ liệu từ DB khi khởi tạo
+            loadData();
         } catch (Exception e) {
             Notifications.getInstance().show(Notifications.Type.ERROR, "Lỗi tải dữ liệu: " + e.getMessage());
         }
@@ -95,62 +95,57 @@ public class panelQlyKhachhang extends JPanel {
 
         table.getTableHeader().setReorderingAllowed(false);
         scrollPane.setViewportView(table);
-        
-        
-     // Cài đặt tiêu đề bảng
+
         JTableHeader header = table.getTableHeader();
         header.setDefaultRenderer(new DefaultTableCellRenderer() {
             @Override
             public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
                 Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-                ((JLabel) c).setHorizontalAlignment(SwingConstants.CENTER); // Center-align all headers
+                ((JLabel) c).setHorizontalAlignment(SwingConstants.CENTER);
                 c.setFont(new Font("Segoe UI", Font.BOLD, 13));
                 return c;
             }
         });
 
-        // Cài đặt renderer checkbox cho cột đầu tiên
         table.getColumnModel().getColumn(0).setHeaderRenderer(new CheckBoxTableHeaderRenderer(table, 0));
 
-        // Căn giữa dữ liệu các cột (trừ cột checkbox)
         DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
         centerRenderer.setHorizontalAlignment(SwingConstants.CENTER);
         for (int i = 1; i < table.getColumnCount(); i++) {
             table.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
         }
 
-        // Đặt chiều rộng cột cố định
         if (table.getColumnModel().getColumnCount() > 0) {
-            TableColumn column0 = table.getColumnModel().getColumn(0); // SELECT
+            TableColumn column0 = table.getColumnModel().getColumn(0);
             column0.setMinWidth(50);
             column0.setMaxWidth(100);
             column0.setPreferredWidth(100);
 
-            TableColumn column1 = table.getColumnModel().getColumn(1); // STT
+            TableColumn column1 = table.getColumnModel().getColumn(1);
             column1.setMinWidth(50);
             column1.setMaxWidth(100);
             column1.setPreferredWidth(100);
 
-            TableColumn column2 = table.getColumnModel().getColumn(2); // Mã khách hàng
+            TableColumn column2 = table.getColumnModel().getColumn(2);
             column2.setMinWidth(150);
             column2.setMaxWidth(300);
             column2.setPreferredWidth(300);
 
-            TableColumn column3 = table.getColumnModel().getColumn(3); // Tên khách hàng
+            TableColumn column3 = table.getColumnModel().getColumn(3);
             column3.setMinWidth(250);
             column3.setMaxWidth(500);
             column3.setPreferredWidth(500);
 
-            TableColumn column4 = table.getColumnModel().getColumn(4); // Số điện thoại
+            TableColumn column4 = table.getColumnModel().getColumn(4);
             column4.setMinWidth(150);
             column4.setMaxWidth(300);
             column4.setPreferredWidth(300);
 
-            TableColumn column5 = table.getColumnModel().getColumn(5); // Giới tính
+            TableColumn column5 = table.getColumnModel().getColumn(5);
             column5.setMinWidth(100);
             column5.setMaxWidth(300);
             column5.setPreferredWidth(300);
-        }	
+        }
 
         setLayout(null);
 
@@ -171,7 +166,7 @@ public class panelQlyKhachhang extends JPanel {
         btnXa.addActionListener(e -> cmdDeleteActionPerformed());
         add(btnXa);
 
-        btnSua = new JButton("Sửa");
+        btnSua = new JButton("Cập nhật");
         btnSua.setFont(new Font("Segoe UI", Font.BOLD, 15));
         btnSua.setBackground(Color.GREEN);
         btnSua.setBounds(1407, 45, 107, 33);
@@ -218,12 +213,12 @@ public class panelQlyKhachhang extends JPanel {
 
         JButton btnThoat = new JButton("Thoát");
         btnThoat.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        btnThoat.setBackground(new Color(255, 99, 71)); 
+        btnThoat.setBackground(new Color(255, 99, 71));
         btnThoat.setForeground(Color.WHITE);
 
         JButton btnLuu = new JButton("Lưu");
         btnLuu.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        btnLuu.setBackground(new Color(76, 175, 80)); 
+        btnLuu.setBackground(new Color(76, 175, 80));
         btnLuu.setForeground(Color.WHITE);
 
         buttonPanel.add(btnThoat);
@@ -237,15 +232,13 @@ public class panelQlyKhachhang extends JPanel {
             }
         };
 
-        // Sử dụng SimplePopupBorder với mảng actions rỗng để không hiển thị nút mặc định
         SimplePopupBorder popupBorder = new SimplePopupBorder(mainPanel, "Thêm khách hàng", new String[]{}, null);
 
         GlassPanePopup.showPopup(popupBorder, option);
 
-        // Thêm ActionListener cho các nút
         btnThoat.addActionListener(e -> GlassPanePopup.closePopupLast());
         btnLuu.addActionListener(e -> {
-        	try {
+            try {
                 KhachHang kh = create.getData();
                 if (kh != null) {
                     if (dao.checkMaKHExists(kh.getMaKH())) {
@@ -280,12 +273,12 @@ public class panelQlyKhachhang extends JPanel {
 
                 JButton btnHuy = new JButton("Hủy");
                 btnHuy.setFont(new Font("Segoe UI", Font.BOLD, 14));
-                btnHuy.setBackground(new Color(255, 99, 71)); // Màu đỏ nhạt (tomato)
+                btnHuy.setBackground(new Color(255, 99, 71));
                 btnHuy.setForeground(Color.WHITE);
 
                 JButton btnCapNhat = new JButton("Cập nhật");
                 btnCapNhat.setFont(new Font("Segoe UI", Font.BOLD, 14));
-                btnCapNhat.setBackground(new Color(76, 175, 80)); // Sử dụng màu focus từ theme (#82AAFF)
+                btnCapNhat.setBackground(new Color(76, 175, 80));
                 btnCapNhat.setForeground(Color.WHITE);
 
                 buttonPanel.add(btnHuy);
@@ -299,7 +292,7 @@ public class panelQlyKhachhang extends JPanel {
                     }
                 };
 
-                SimplePopupBorder popupBorder = new SimplePopupBorder(mainPanel, "Sửa khách hàng [" + data.getTenKH() + "]", new String[]{}, null);
+                SimplePopupBorder popupBorder = new SimplePopupBorder(mainPanel, "Cập nhật khách hàng [" + data.getTenKH() + "]", new String[]{}, null);
 
                 GlassPanePopup.showPopup(popupBorder, option);
 
@@ -318,10 +311,10 @@ public class panelQlyKhachhang extends JPanel {
                     }
                 });
             } else {
-                Notifications.getInstance().show(Notifications.Type.WARNING, "Vui lòng chỉ chọn một khách hàng để sửa!");
+                Notifications.getInstance().show(Notifications.Type.WARNING, "Vui lòng chỉ chọn một khách hàng để cập nhật!");
             }
         } else {
-            Notifications.getInstance().show(Notifications.Type.WARNING, "Vui lòng chọn khách hàng để sửa!");
+            Notifications.getInstance().show(Notifications.Type.WARNING, "Vui lòng chọn khách hàng để cập nhật!");
         }
     }
 
@@ -340,12 +333,12 @@ public class panelQlyKhachhang extends JPanel {
 
             JButton btnHuy = new JButton("Hủy");
             btnHuy.setFont(new Font("Segoe UI", Font.BOLD, 14));
-            btnHuy.setBackground(new Color(255, 99, 71)); // Màu đỏ nhạt (tomato)
+            btnHuy.setBackground(new Color(255, 99, 71));
             btnHuy.setForeground(Color.WHITE);
 
             JButton btnXoa = new JButton("Xóa");
             btnXoa.setFont(new Font("Segoe UI", Font.BOLD, 14));
-            btnXoa.setBackground(new Color(76, 175, 80)); // Màu đỏ đậm (orangered)
+            btnXoa.setBackground(new Color(76, 175, 80));
             btnXoa.setForeground(Color.WHITE);
 
             buttonPanel.add(btnHuy);

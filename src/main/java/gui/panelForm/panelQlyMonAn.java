@@ -49,21 +49,21 @@ import java.nio.file.StandardCopyOption;
 public class panelQlyMonAn extends JPanel {
     private static final long serialVersionUID = 1L;
 
-    private JTextField txtMaMonAn; 
-    private JTextField txtTenMonAn; 
-    private JTextField txtGiaMonAn; 
-    private JTextField txtTimKiem; 
-    private JTextField txtLoaiMonAn; 
-    private JTextField txtDuongDanHinhAnh; 
-    private JComboBox<String> cbTimKiemTheo; 
-    private JComboBox<String> cbLocLoaiMonAn; 
-    private JTextArea txtGhiChu; 
-    private JLabel lblXemTruocHinhAnh; 
-    private JPanel pnlDanhSachMonAn; 
+    private JTextField txtMaMonAn;
+    private JTextField txtTenMonAn;
+    private JTextField txtGiaMonAn;
+    private JTextField txtTimKiem;
+    private JComboBox<String> cbLoaiMonAn;
+    private JTextField txtDuongDanHinhAnh;
+    private JComboBox<String> cbTimKiemTheo;
+    private JComboBox<String> cbLocLoaiMonAn;
+    private JTextArea txtGhiChu;
+    private JLabel lblXemTruocHinhAnh;
+    private JPanel pnlDanhSachMonAn;
     private DAO_MonAn daoMonAn;
     private int columns;
-    private int chieuRongPnlDanhSach; 
-    private String chuoiTimKiemMacDinh; 
+    private int chieuRongPnlDanhSach;
+    private String chuoiTimKiemMacDinh;
 
     public panelQlyMonAn() throws Exception {
         setBackground(SystemColor.controlHighlight);
@@ -75,7 +75,7 @@ public class panelQlyMonAn extends JPanel {
         FlatLaf.registerCustomDefaultsSource("themes");
         FlatIntelliJLaf.setup();
         UIManager.put("defaultFont", new Font(FlatRobotoFont.FAMILY, Font.PLAIN, 13));
-        
+
         // Tùy chỉnh màu sắc qua UIManager
         UIManager.put("Panel.background", new Color(247, 248, 252));
         UIManager.put("Button.background", new Color(52, 102, 255));
@@ -90,6 +90,7 @@ public class panelQlyMonAn extends JPanel {
         chieuRongPnlDanhSach = 1200;
         chuoiTimKiemMacDinh = "Tìm kiếm theo mã món ăn, tên món ăn";
 
+        // Danh sách món ăn
         pnlDanhSachMonAn = new JPanel();
         pnlDanhSachMonAn.setBounds(10, 47, 1200, 793);
         add(pnlDanhSachMonAn);
@@ -125,6 +126,7 @@ public class panelQlyMonAn extends JPanel {
         scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         add(scrollPane);
 
+        // Panel nhập thông tin
         JPanel pnlNhapThongTin = new JPanel();
         pnlNhapThongTin.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, new Color(255, 255, 255), new Color(160, 160, 160)),
             "Thông tin món ăn", TitledBorder.CENTER, TitledBorder.TOP, null, new Color(0, 0, 0)));
@@ -171,10 +173,15 @@ public class panelQlyMonAn extends JPanel {
         lblLoaiMonAn.setBounds(10, 220, 91, 35);
         pnlNhapThongTin.add(lblLoaiMonAn);
 
-        txtLoaiMonAn = new JTextField();
-        txtLoaiMonAn.setColumns(10);
-        txtLoaiMonAn.setBounds(111, 220, 182, 30);
-        pnlNhapThongTin.add(txtLoaiMonAn);
+        cbLoaiMonAn = new JComboBox<>();
+        cbLoaiMonAn.setBounds(111, 220, 182, 30);
+        cbLoaiMonAn.addItem("");
+        List<String> loaiMonAnList = daoMonAn.getAllLoaiMonAn();
+        for (String loai : loaiMonAnList) {
+            cbLoaiMonAn.addItem(loai);
+        }
+        cbLoaiMonAn.setEditable(true); // Cho phép nhập loại mới
+        pnlNhapThongTin.add(cbLoaiMonAn);
 
         JLabel lblGhiChu = new JLabel("Ghi chú");
         lblGhiChu.setFont(new Font("Segoe UI", Font.BOLD, 15));
@@ -184,24 +191,24 @@ public class panelQlyMonAn extends JPanel {
         txtGhiChu = new JTextArea();
         txtGhiChu.setBounds(10, 305, 283, 150);
         pnlNhapThongTin.add(txtGhiChu);
-        
+
         JLabel lblHinhAnh = new JLabel("Hình ảnh");
         lblHinhAnh.setHorizontalAlignment(SwingConstants.CENTER);
         lblHinhAnh.setFont(new Font("Segoe UI", Font.BOLD, 15));
         lblHinhAnh.setBounds(10, 465, 91, 35);
         pnlNhapThongTin.add(lblHinhAnh);
-        
+
         txtDuongDanHinhAnh = new JTextField();
         txtDuongDanHinhAnh.setBounds(111, 465, 182, 30);
         txtDuongDanHinhAnh.setEditable(false);
         pnlNhapThongTin.add(txtDuongDanHinhAnh);
         txtDuongDanHinhAnh.setColumns(10);
-        
+
         JButton btnChonHinhAnh = new JButton("Chọn hình");
         btnChonHinhAnh.setFont(new Font("Segoe UI", Font.BOLD, 13));
         btnChonHinhAnh.setBounds(111, 505, 100, 30);
         pnlNhapThongTin.add(btnChonHinhAnh);
-        
+
         lblXemTruocHinhAnh = new JLabel("Hình ảnh sẽ hiển thị ở đây", SwingConstants.CENTER);
         lblXemTruocHinhAnh.setBounds(10, 545, 283, 200);
         lblXemTruocHinhAnh.setBackground(Color.LIGHT_GRAY);
@@ -220,6 +227,7 @@ public class panelQlyMonAn extends JPanel {
                     fileChooser.setCurrentDirectory(defaultDirectory);
                 } catch (Exception ex) {
                     ex.printStackTrace();
+                    JOptionPane.showMessageDialog(this, "Lỗi tạo thư mục: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
                 }
             }
             FileNameExtensionFilter filter = new FileNameExtensionFilter("Image files", "jpg", "png", "jpeg", "gif");
@@ -227,7 +235,7 @@ public class panelQlyMonAn extends JPanel {
             int returnVal = fileChooser.showOpenDialog(this);
             if (returnVal == JFileChooser.APPROVE_OPTION) {
                 try {
-                    java.io.File selectedFile = fileChooser.getSelectedFile();
+                    File selectedFile = fileChooser.getSelectedFile();
                     Path sourcePath = selectedFile.toPath();
                     Path targetDir = Paths.get("src/main/resources/img");
                     if (!Files.exists(targetDir)) {
@@ -238,6 +246,7 @@ public class panelQlyMonAn extends JPanel {
                     Files.copy(sourcePath, targetPath, StandardCopyOption.REPLACE_EXISTING);
                     String relativePath = "/img/" + targetFileName;
                     txtDuongDanHinhAnh.setText(relativePath);
+
                     URL imgURL = getClass().getResource(relativePath);
                     if (imgURL != null) {
                         ImageIcon imageIcon = new ImageIcon(imgURL);
@@ -252,6 +261,7 @@ public class panelQlyMonAn extends JPanel {
                     ex.printStackTrace();
                     lblXemTruocHinhAnh.setIcon(null);
                     lblXemTruocHinhAnh.setText("Lỗi tải hình ảnh");
+                    JOptionPane.showMessageDialog(this, "Lỗi tải hình ảnh: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
                 }
             }
         });
@@ -260,14 +270,12 @@ public class panelQlyMonAn extends JPanel {
         cbLocLoaiMonAn = new JComboBox<>();
         cbLocLoaiMonAn.setBounds(10, 10, 150, 35);
         cbLocLoaiMonAn.addItem("Tất cả");
-        // Load danh sách loại món ăn từ cơ sở dữ liệu
-        List<String> loaiMonAnList = daoMonAn.getAllLoaiMonAn();
         for (String loai : loaiMonAnList) {
             cbLocLoaiMonAn.addItem(loai);
         }
         add(cbLocLoaiMonAn);
 
-        // Thêm các nút "Thêm", "Xóa", "Sửa"
+        // Thêm các nút "Thêm", "Xóa", "Cập nhật"
         JButton btnThem = new JButton("Thêm");
         btnThem.setFont(new Font("Segoe UI", Font.BOLD, 15));
         btnThem.setBounds(800, 10, 108, 35);
@@ -280,51 +288,11 @@ public class panelQlyMonAn extends JPanel {
         btnXoa.setBounds(950, 10, 108, 35);
         add(btnXoa);
 
-        JButton btnSua = new JButton("Sửa");
-        btnSua.setBackground(Color.GREEN);
-        btnSua.setFont(new Font("Segoe UI", Font.BOLD, 15));
-        btnSua.setBounds(1100, 10, 108, 35);
-        add(btnSua);
-
-        // ActionListener cho cbLocLoaiMonAn
-        cbLocLoaiMonAn.addActionListener(e -> {
-            String selectedType = (String) cbLocLoaiMonAn.getSelectedItem();
-            if (selectedType == null) {
-                return; // Bỏ qua nếu không có mục nào được chọn
-            }
-            try {
-                List<MonAn> result = daoMonAn.filterMonAnByLoai(selectedType.equals("Tất cả") ? "All" : selectedType);
-                pnlDanhSachMonAn.removeAll();
-                int i = 0;
-                for (MonAn monAn : result) {
-                    int row = i / columns;
-                    int col = i % columns;
-                    int x = 10 + col * (270 + 39);
-                    int y = 10 + row * (340 + 33);
-                    JPanel dishPanel = createMonAnPanel(
-                        monAn.getTenMonAn(),
-                        monAn.getDuongDanHinhAnh(),
-                        monAn.getMaMonAn(),
-                        String.valueOf(monAn.getGia()),
-                        monAn.getLoaiMonAn(),
-                        monAn.getGhiChu()
-                    );
-                    dishPanel.setBounds(x, y, 270, 340);
-                    pnlDanhSachMonAn.add(dishPanel);
-                    i++;
-                }
-                int panelHeightFilter = (int) Math.ceil((double) i / columns) * (340 + 33);
-                pnlDanhSachMonAn.setPreferredSize(new Dimension(chieuRongPnlDanhSach, panelHeightFilter));
-                pnlDanhSachMonAn.setBounds(0, 0, chieuRongPnlDanhSach, panelHeightFilter);
-                scrollPane.revalidate();
-                scrollPane.repaint();
-                pnlDanhSachMonAn.revalidate();
-                pnlDanhSachMonAn.repaint();
-            } catch (Exception ex) {
-                ex.printStackTrace();
-                JOptionPane.showMessageDialog(null, "Lỗi lọc món ăn: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
-            }
-        });
+        JButton btnCapNhat = new JButton("Cập nhật");
+        btnCapNhat.setBackground(Color.GREEN);
+        btnCapNhat.setFont(new Font("Segoe UI", Font.BOLD, 15));
+        btnCapNhat.setBounds(1100, 10, 108, 35);
+        add(btnCapNhat);
 
         // TextField tìm kiếm với placeholder và nút tìm kiếm bên trong
         txtTimKiem = new JTextField();
@@ -382,6 +350,47 @@ public class panelQlyMonAn extends JPanel {
         cbTimKiemTheo.addItem("Mã món ăn");
         cbTimKiemTheo.addItem("Tên món ăn");
 
+        // ActionListener cho cbLocLoaiMonAn
+        cbLocLoaiMonAn.addActionListener(e -> {
+            String selectedType = (String) cbLocLoaiMonAn.getSelectedItem();
+            if (selectedType == null) {
+                return;
+            }
+            try {
+                List<MonAn> result = daoMonAn.filterMonAnByLoai(selectedType.equals("Tất cả") ? "All" : selectedType);
+                pnlDanhSachMonAn.removeAll();
+                int i = 0;
+                for (MonAn monAn : result) {
+                    int row = i / columns;
+                    int col = i % columns;
+                    int x = 10 + col * (270 + 39);
+                    int y = 10 + row * (340 + 33);
+                    JPanel dishPanel = createMonAnPanel(
+                        monAn.getTenMonAn(),
+                        monAn.getDuongDanHinhAnh(),
+                        monAn.getMaMonAn(),
+                        String.valueOf(monAn.getGia()),
+                        monAn.getLoaiMonAn(),
+                        monAn.getGhiChu()
+                    );
+                    dishPanel.setBounds(x, y, 270, 340);
+                    pnlDanhSachMonAn.add(dishPanel);
+                    i++;
+                }
+                int panelHeightFilter = (int) Math.ceil((double) i / columns) * (340 + 33);
+                pnlDanhSachMonAn.setPreferredSize(new Dimension(chieuRongPnlDanhSach, panelHeightFilter));
+                pnlDanhSachMonAn.setBounds(0, 0, chieuRongPnlDanhSach, panelHeightFilter);
+                scrollPane.revalidate();
+                scrollPane.repaint();
+                pnlDanhSachMonAn.revalidate();
+                pnlDanhSachMonAn.repaint();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(this, "Lỗi lọc món ăn: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
+        // ActionListener cho btnTimKiem
         btnTimKiem.addActionListener(e -> {
             String query = txtTimKiem.getText();
             String searchBy = cbTimKiemTheo.getSelectedItem().toString();
@@ -414,36 +423,35 @@ public class panelQlyMonAn extends JPanel {
                     pnlDanhSachMonAn.repaint();
                 } catch (Exception ex) {
                     ex.printStackTrace();
-                    JOptionPane.showMessageDialog(null, "Lỗi tìm kiếm: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(this, "Lỗi tìm kiếm: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
                 }
             }
         });
 
-        // Thêm ActionListener cho btnThem
+        // ActionListener cho btnThem
         btnThem.addActionListener(e -> {
             try {
                 String maMonAn = txtMaMonAn.getText().trim();
                 String tenMonAn = txtTenMonAn.getText().trim();
                 String giaStr = txtGiaMonAn.getText().trim();
-                String loaiMonAn = txtLoaiMonAn.getText().trim();
+                String loaiMonAn = cbLoaiMonAn.getSelectedItem() != null ? cbLoaiMonAn.getSelectedItem().toString().trim() : "";
                 String ghiChu = txtGhiChu.getText().trim();
                 String duongDanHinhAnh = txtDuongDanHinhAnh.getText().trim();
 
                 // Kiểm tra dữ liệu đầu vào
                 if (maMonAn.isEmpty() || tenMonAn.isEmpty() || giaStr.isEmpty() || loaiMonAn.isEmpty()) {
-                    JOptionPane.showMessageDialog(null, "Vui lòng nhập đầy đủ thông tin (mã, tên, giá, loại món ăn)!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(this, "Vui lòng nhập đầy đủ thông tin (mã, tên, giá, loại món ăn)!", "Lỗi", JOptionPane.ERROR_MESSAGE);
                     return;
                 }
-                
-                if(!maMonAn.matches("^MA\\d{3}")) {
-                	JOptionPane.showMessageDialog(null, "Vui lòng nhập đúng mã món ăn theo mẫu. VD: MA001", "Lỗi", JOptionPane.ERROR_MESSAGE);
-                	txtMaMonAn.requestFocusInWindow();
-                	return ;
-                	
+
+                if (!maMonAn.matches("^MA\\d{3}$")) {
+                    JOptionPane.showMessageDialog(this, "Mã món ăn phải theo định dạng MAxxx (x là số)!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                    txtMaMonAn.requestFocusInWindow();
+                    return;
                 }
-                
+
                 if (daoMonAn.checkMaMonAnExists(maMonAn)) {
-                    JOptionPane.showMessageDialog(null, "Mã món ăn đã tồn tại!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(this, "Mã món ăn đã tồn tại!", "Lỗi", JOptionPane.ERROR_MESSAGE);
                     txtMaMonAn.requestFocusInWindow();
                     return;
                 }
@@ -452,12 +460,12 @@ public class panelQlyMonAn extends JPanel {
                 try {
                     gia = Float.parseFloat(giaStr);
                     if (gia <= 0) {
-                        JOptionPane.showMessageDialog(null, "Giá món ăn phải lớn hơn 0!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                        JOptionPane.showMessageDialog(this, "Giá món ăn phải lớn hơn 0!", "Lỗi", JOptionPane.ERROR_MESSAGE);
                         txtGiaMonAn.requestFocusInWindow();
                         return;
                     }
                 } catch (NumberFormatException ex) {
-                    JOptionPane.showMessageDialog(null, "Giá món ăn phải là số hợp lệ!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(this, "Giá món ăn phải là số hợp lệ!", "Lỗi", JOptionPane.ERROR_MESSAGE);
                     txtGiaMonAn.requestFocusInWindow();
                     return;
                 }
@@ -492,39 +500,42 @@ public class panelQlyMonAn extends JPanel {
                 pnlDanhSachMonAn.revalidate();
                 pnlDanhSachMonAn.repaint();
 
-                // Cập nhật cbLocLoaiMonAn
+                // Cập nhật cbLocLoaiMonAn và cbLoaiMonAn
                 cbLocLoaiMonAn.removeAllItems();
+                cbLoaiMonAn.removeAllItems();
                 cbLocLoaiMonAn.addItem("Tất cả");
+                cbLoaiMonAn.addItem("");
                 List<String> updatedLoaiMonAnList = daoMonAn.getAllLoaiMonAn();
                 for (String loai : updatedLoaiMonAnList) {
                     cbLocLoaiMonAn.addItem(loai);
+                    cbLoaiMonAn.addItem(loai);
                 }
 
-                JOptionPane.showMessageDialog(null, "Thêm món ăn thành công!", "Thành công", JOptionPane.INFORMATION_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Thêm món ăn thành công!", "Thành công", JOptionPane.INFORMATION_MESSAGE);
+                clearForm();
             } catch (Exception ex) {
                 ex.printStackTrace();
-                JOptionPane.showMessageDialog(null, "Lỗi thêm món ăn: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Lỗi thêm món ăn: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
             }
         });
 
-        // Thêm ActionListener cho btnXoa
+        // ActionListener cho btnXoa
         btnXoa.addActionListener(e -> {
             try {
                 String maMonAn = txtMaMonAn.getText().trim();
                 if (maMonAn.isEmpty()) {
-                    JOptionPane.showMessageDialog(null, "Vui lòng nhập mã món ăn để xóa!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(this, "Vui lòng nhập mã món ăn để xóa!", "Lỗi", JOptionPane.ERROR_MESSAGE);
                     txtMaMonAn.requestFocusInWindow();
                     return;
                 }
 
-                // Kiểm tra mã món ăn tồn tại
                 if (!daoMonAn.checkMaMonAnExists(maMonAn)) {
-                    JOptionPane.showMessageDialog(null, "Mã món ăn không tồn tại!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(this, "Mã món ăn không tồn tại!", "Lỗi", JOptionPane.ERROR_MESSAGE);
                     txtMaMonAn.requestFocusInWindow();
                     return;
                 }
 
-                int confirm = JOptionPane.showConfirmDialog(null, "Bạn có chắc muốn xóa món ăn này?", "Xác nhận xóa", JOptionPane.YES_NO_OPTION);
+                int confirm = JOptionPane.showConfirmDialog(this, "Bạn có chắc muốn xóa món ăn này?", "Xác nhận xóa", JOptionPane.YES_NO_OPTION);
                 if (confirm == JOptionPane.YES_OPTION) {
                     daoMonAn.deleteMonAn(maMonAn);
 
@@ -554,41 +565,45 @@ public class panelQlyMonAn extends JPanel {
                     pnlDanhSachMonAn.revalidate();
                     pnlDanhSachMonAn.repaint();
 
-                    // Cập nhật cbLocLoaiMonAn
+                    // Cập nhật cbLocLoaiMonAn và cbLoaiMonAn
                     cbLocLoaiMonAn.removeAllItems();
+                    cbLoaiMonAn.removeAllItems();
                     cbLocLoaiMonAn.addItem("Tất cả");
+                    cbLoaiMonAn.addItem("");
                     List<String> updatedLoaiMonAnList = daoMonAn.getAllLoaiMonAn();
                     for (String loai : updatedLoaiMonAnList) {
                         cbLocLoaiMonAn.addItem(loai);
+                        cbLoaiMonAn.addItem(loai);
                     }
 
-                    JOptionPane.showMessageDialog(null, "Xóa món ăn thành công!", "Thành công", JOptionPane.INFORMATION_MESSAGE);
+                    JOptionPane.showMessageDialog(this, "Xóa món ăn thành công!", "Thành công", JOptionPane.INFORMATION_MESSAGE);
+                    clearForm();
                 }
             } catch (Exception ex) {
                 ex.printStackTrace();
-                JOptionPane.showMessageDialog(null, "Lỗi xóa món ăn: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Lỗi xóa món ăn: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
             }
         });
 
-        // Thêm ActionListener cho btnSua
-        btnSua.addActionListener(e -> {
+        // ActionListener cho btnCapNhat
+        btnCapNhat.addActionListener(e -> {
             try {
                 String maMonAn = txtMaMonAn.getText().trim();
                 String tenMonAn = txtTenMonAn.getText().trim();
                 String giaStr = txtGiaMonAn.getText().trim();
-                String loaiMonAn = txtLoaiMonAn.getText().trim();
+                String loaiMonAn = cbLoaiMonAn.getSelectedItem() != null ? cbLoaiMonAn.getSelectedItem().toString().trim() : "";
                 String ghiChu = txtGhiChu.getText().trim();
                 String duongDanHinhAnh = txtDuongDanHinhAnh.getText().trim();
 
                 // Kiểm tra dữ liệu đầu vào
                 if (maMonAn.isEmpty() || tenMonAn.isEmpty() || giaStr.isEmpty() || loaiMonAn.isEmpty()) {
-                    JOptionPane.showMessageDialog(null, "Vui lòng nhập đầy đủ thông tin (mã, tên, giá, loại món ăn)!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(this, "Vui lòng nhập đầy đủ thông tin (mã, tên, giá, loại món ăn)!", "Lỗi", JOptionPane.ERROR_MESSAGE);
                     return;
                 }
-                
+
                 MonAn existingMonAn = daoMonAn.getMonAnByMa(maMonAn);
                 if (existingMonAn == null) {
-                    JOptionPane.showMessageDialog(null, "Mã món ăn không tồn tại!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(this, "Mã món ăn không tồn tại!", "Lỗi", JOptionPane.ERROR_MESSAGE);
                     txtMaMonAn.requestFocusInWindow();
                     return;
                 }
@@ -597,12 +612,12 @@ public class panelQlyMonAn extends JPanel {
                 try {
                     gia = Float.parseFloat(giaStr);
                     if (gia <= 0) {
-                        JOptionPane.showMessageDialog(null, "Giá món ăn phải lớn hơn 0!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                        JOptionPane.showMessageDialog(this, "Giá món ăn phải lớn hơn 0!", "Lỗi", JOptionPane.ERROR_MESSAGE);
                         txtGiaMonAn.requestFocusInWindow();
                         return;
                     }
                 } catch (NumberFormatException ex) {
-                    JOptionPane.showMessageDialog(null, "Giá món ăn phải là số hợp lệ!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(this, "Giá món ăn phải là số hợp lệ!", "Lỗi", JOptionPane.ERROR_MESSAGE);
                     txtGiaMonAn.requestFocusInWindow();
                     return;
                 }
@@ -636,20 +651,35 @@ public class panelQlyMonAn extends JPanel {
                 pnlDanhSachMonAn.revalidate();
                 pnlDanhSachMonAn.repaint();
 
-                // Cập nhật cbLocLoaiMonAn
+                // Cập nhật cbLocLoaiMonAn và cbLoaiMonAn
                 cbLocLoaiMonAn.removeAllItems();
+                cbLoaiMonAn.removeAllItems();
                 cbLocLoaiMonAn.addItem("Tất cả");
+                cbLoaiMonAn.addItem("");
                 List<String> updatedLoaiMonAnList = daoMonAn.getAllLoaiMonAn();
                 for (String loai : updatedLoaiMonAnList) {
                     cbLocLoaiMonAn.addItem(loai);
+                    cbLoaiMonAn.addItem(loai);
                 }
 
-                JOptionPane.showMessageDialog(null, "Cập nhật món ăn thành công!", "Thành công", JOptionPane.INFORMATION_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Cập nhật món ăn thành công!", "Thành công", JOptionPane.INFORMATION_MESSAGE);
+                clearForm();
             } catch (Exception ex) {
                 ex.printStackTrace();
-                JOptionPane.showMessageDialog(null, "Lỗi cập nhật món ăn: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Lỗi cập nhật món ăn: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
             }
         });
+    }
+
+    private void clearForm() {
+        txtMaMonAn.setText("");
+        txtTenMonAn.setText("");
+        txtGiaMonAn.setText("");
+        cbLoaiMonAn.setSelectedIndex(0);
+        txtGhiChu.setText("");
+        txtDuongDanHinhAnh.setText("");
+        lblXemTruocHinhAnh.setIcon(null);
+        lblXemTruocHinhAnh.setText("Hình ảnh sẽ hiển thị ở đây");
     }
 
     private JPanel createMonAnPanel(String tenMon, String imagePath, String maMon, String giaMon, String loaiMon, String ghichu) {
@@ -706,21 +736,21 @@ public class panelQlyMonAn extends JPanel {
         lblLoaiMonAn.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         lblLoaiMonAn.setBounds(10, 284, 250, 20);
         pnlMonAn.add(lblLoaiMonAn);
-        
+
         JLabel lblGhiChuMonAn = new JLabel("Ghi chú: " + (ghichu != null ? ghichu : ""));
         lblGhiChuMonAn.setHorizontalAlignment(SwingConstants.LEFT);
         lblGhiChuMonAn.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         lblGhiChuMonAn.setBounds(10, 304, 250, 40);
         pnlMonAn.add(lblGhiChuMonAn);
-        
+
         pnlMonAn.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseClicked(java.awt.event.MouseEvent evt) {
-                txtMaMonAn.setText(maMon); 
-                txtTenMonAn.setText(tenMon); 
-                txtGiaMonAn.setText(giaMon); 
-                txtGhiChu.setText(ghichu != null ? ghichu : ""); 
-                txtLoaiMonAn.setText(loaiMon); 
+                txtMaMonAn.setText(maMon);
+                txtTenMonAn.setText(tenMon);
+                txtGiaMonAn.setText(giaMon);
+                txtGhiChu.setText(ghichu != null ? ghichu : "");
+                cbLoaiMonAn.setSelectedItem(loaiMon);
                 txtDuongDanHinhAnh.setText(imagePath != null ? imagePath : "");
 
                 if (imagePath != null) {

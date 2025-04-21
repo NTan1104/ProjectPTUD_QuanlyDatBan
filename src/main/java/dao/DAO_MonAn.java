@@ -7,11 +7,13 @@ import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class DAO_MonAn extends BaseDAO {
 
+    // Lấy tất cả món ăn
     public List<MonAn> getAllMonAn() throws Exception {
         List<MonAn> list = new ArrayList<>();
         String sql = "{CALL GetAllMonAn}";
@@ -40,10 +42,10 @@ public class DAO_MonAn extends BaseDAO {
              CallableStatement cstmt = conn.prepareCall(sql)) {
             cstmt.setString(1, monAn.getMaMonAn());
             cstmt.setString(2, monAn.getTenMonAn());
-            cstmt.setFloat(3, monAn.getGia());
+            cstmt.setDouble(3, monAn.getGia());
             cstmt.setString(4, monAn.getGhiChu());
             cstmt.setString(5, monAn.getLoaiMonAn());
-            cstmt.setString(6, monAn.getDuongDanHinhAnh());
+            cstmt.setString(6, monAn.getLinkIMG());
             cstmt.executeUpdate();
         }
     }
@@ -55,10 +57,10 @@ public class DAO_MonAn extends BaseDAO {
              CallableStatement cstmt = conn.prepareCall(sql)) {
             cstmt.setString(1, monAn.getMaMonAn());
             cstmt.setString(2, monAn.getTenMonAn());
-            cstmt.setFloat(3, monAn.getGia());
+            cstmt.setDouble(3, monAn.getGia());
             cstmt.setString(4, monAn.getGhiChu());
             cstmt.setString(5, monAn.getLoaiMonAn());
-            cstmt.setString(6, monAn.getDuongDanHinhAnh());
+            cstmt.setString(6, monAn.getLinkIMG());
             cstmt.executeUpdate();
         }
     }
@@ -122,7 +124,7 @@ public class DAO_MonAn extends BaseDAO {
         return list;
     }
 
-    // Lấy món ăn theo mã (nếu cần)
+    // Lấy món ăn theo mã
     public MonAn getMonAnByMa(String maMonAn) throws Exception {
         String sql = "{CALL GetMonAnByMa(?)}";
         try (Connection conn = getConnection();
@@ -143,7 +145,8 @@ public class DAO_MonAn extends BaseDAO {
         }
         return null;
     }
-    
+
+    // Kiểm tra món ăn tồn tại hay không
     public boolean checkMaMonAnExists(String maMonAn) throws Exception {
         String sql = "SELECT COUNT(*) FROM MonAn WHERE MaMonAn = ?";
         try (Connection conn = getConnection();
@@ -157,7 +160,8 @@ public class DAO_MonAn extends BaseDAO {
         }
         return false;
     }
-    
+
+    // Lấy tất cả loại món ăn
     public List<String> getAllLoaiMonAn() throws Exception {
         List<String> list = new ArrayList<>();
         String sql = "{CALL GetAllLoaiMonAn}";
@@ -172,5 +176,21 @@ public class DAO_MonAn extends BaseDAO {
             }
         }
         return list;
+    }
+
+    // Lấy các loại món ăn khác nhau từ cơ sở dữ liệu
+    public List<String> getLoaiMonAn() throws Exception {
+        List<String> loaiMonAnList = new ArrayList<>();
+        String sql = "SELECT DISTINCT LoaiMonAn FROM MonAn WHERE LoaiMonAn IS NOT NULL";
+        try (Connection conn = new BaseDAO().getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                loaiMonAnList.add(rs.getString(1));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return loaiMonAnList;
     }
 }
