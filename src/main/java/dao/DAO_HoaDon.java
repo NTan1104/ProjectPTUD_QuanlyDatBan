@@ -66,4 +66,16 @@ public class DAO_HoaDon extends BaseDAO {
 		}
 	    return maHD;
 	}
+	public boolean capNhatTrangThaiHoaDon(String maHD, String trangThai) throws SQLException {
+	    String query = "UPDATE HoaDon SET TrangThai = ? WHERE MaHD = ?";
+	    try (Connection conn = new BaseDAO().getConnection(); PreparedStatement ps = conn.prepareStatement(query)) {
+	        ps.setString(1, trangThai);
+	        ps.setString(2, maHD);
+	        return ps.executeUpdate() > 0;
+	    } catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return false;
+	}
 }

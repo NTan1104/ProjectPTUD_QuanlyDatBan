@@ -5,18 +5,23 @@
 	<groupId>Nhom11</groupId>
 	<artifactId>ProjectPTUD</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
+
 	<properties>
 		<maven.compiler.source>11</maven.compiler.source>
 		<maven.compiler.target>11</maven.compiler.target>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
-	<dependencies>
 
+	<dependencies>
+			
+		<!-- VLCJ for media handling -->
 		<dependency>
 			<groupId>uk.co.caprica</groupId>
 			<artifactId>vlcj</artifactId>
 			<version>4.8.2</version>
 		</dependency>
+
+		<!-- FlatLaf for modern UI -->
 		<dependency>
 			<groupId>com.formdev</groupId>
 			<artifactId>flatlaf</artifactId>
@@ -32,6 +37,8 @@
 			<artifactId>flatlaf-fonts-roboto</artifactId>
 			<version>2.137</version>
 		</dependency>
+
+		<!-- MigLayout for layout management -->
 		<dependency>
 			<groupId>com.miglayout</groupId>
 			<artifactId>miglayout-swing</artifactId>
@@ -39,4 +46,10 @@
 		</dependency>
 	</dependencies>
 
+	<repositories>
+		<repository>
+			<id>central</id>
+			<url>https://repo.maven.apache.org/maven2</url>
+		</repository>
+	</repositories>
 </project>

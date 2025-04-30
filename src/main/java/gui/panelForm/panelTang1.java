@@ -33,8 +33,20 @@ import entity.KhachHang;
 import entity.KhuyenMai;
 import entity.MonAn;
 import entity.PhieuDatBan;
+import entity.PhuongThucThanhToan;
 
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableCellRenderer;
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.client.j2se.MatrixToImageWriter;
+import com.google.zxing.common.BitMatrix;
+import com.google.zxing.qrcode.QRCodeWriter;
+import java.io.File;
+import java.io.IOException;
+
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.nio.charset.StandardCharsets;
 
 public class panelTang1 extends JPanel {
 	private static final long serialVersionUID = 1L;
@@ -187,7 +199,7 @@ public class panelTang1 extends JPanel {
 							CTPhieuDatBan ctpdb = CTPDB_DAO.getCTPDBByMa(pdb.getMaPDB());
 
 							if (kh != null && ctpdb != null) {
-								displayBanDetails(tenBan, status, kh.getMaKH(), "Nguyen Tan", kh.getSdt(),
+								displayBanDetails(tenBan, status, kh.getMaKH(), kh.getTenKH(), kh.getSdt(),
 										kh.getGioiTinh(), String.valueOf(ctpdb.getSoNguoi()));
 								panel_ChiTietBan.setVisible(true);
 							} else {
@@ -219,7 +231,7 @@ public class panelTang1 extends JPanel {
 						CTPDB_DAO = new DAO_CTPhieuDatBan();
 						CTPhieuDatBan CTPDB = CTPDB_DAO.getCTPDBByMa(maPDB);
 
-						displayBanDetails(tenBan, "ĐÃ ĐẶT", KH.getMaKH(),"Nguyen Tan" , KH.getSdt(), KH.getGioiTinh(),
+						displayBanDetails(tenBan, "ĐÃ ĐẶT", KH.getMaKH(), KH.getTenKH(), KH.getSdt(), KH.getGioiTinh(),
 								String.valueOf(CTPDB.getSoNguoi()));
 						panel_ChiTietBan.setVisible(true);
 					});
@@ -242,8 +254,8 @@ public class panelTang1 extends JPanel {
 		panel_ChiTietBan.setBackground(new Color(255, 255, 255));
 
 		btnHuyBan = new JButton("HỦY BÀN");
-		btnHuyBan.setFont(new Font("Dialog", Font.BOLD, 20));
-		btnHuyBan.setBounds(10, 684, 180, 43);
+		btnHuyBan.setFont(new Font("Dialog", Font.BOLD, 15));
+		btnHuyBan.setBounds(10, 684, 140, 43);
 		btnHuyBan.setBackground(
 				status.equals("ĐÃ ĐẶT") ? new Color(239, 68, 68) : UIManager.getColor("Button.disabledBackground"));
 		btnHuyBan.setForeground(Color.WHITE);
@@ -277,6 +289,7 @@ public class panelTang1 extends JPanel {
 						panel_ChiTietBan.setVisible(false);
 						refreshBanList();
 						JOptionPane.showMessageDialog(panelTang1.this, "Hủy bàn thành công");
+						panel_ChiTietBan.setVisible(false);
 					} catch (SQLException ex) {
 						ex.printStackTrace();
 						JOptionPane.showMessageDialog(panelTang1.this, "Lỗi khi hủy bàn: " + ex.getMessage());
@@ -286,9 +299,32 @@ public class panelTang1 extends JPanel {
 		});
 		panel_ChiTietBan.add(btnHuyBan);
 
+		JButton btnGopBan = new JButton("GỘP BÀN");
+		btnGopBan.setFont(new Font("Dialog", Font.BOLD, 15));
+		btnGopBan.setBounds(160, 684, 140, 43);
+		btnGopBan.setBackground(new Color(245, 158, 11));
+		btnGopBan.setForeground(Color.WHITE);
+		btnGopBan.setFocusPainted(false);
+		btnGopBan.setBorderPainted(false);
+		btnGopBan.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseEntered(MouseEvent e) {
+				btnGopBan.setBackground(new Color(217, 119, 6));
+			}
+
+			@Override
+			public void mouseExited(MouseEvent e) {
+				btnGopBan.setBackground(new Color(245, 158, 11));
+			}
+		});
+		btnGopBan.addActionListener(e -> {
+			JOptionPane.showMessageDialog(panelTang1.this, "Chức năng gộp bàn đang được phát triển!");
+		});
+		panel_ChiTietBan.add(btnGopBan);
+
 		JButton btnChuyenBan = new JButton("CHUYỂN BÀN");
-		btnChuyenBan.setFont(new Font("Dialog", Font.BOLD, 20));
-		btnChuyenBan.setBounds(269, 684, 180, 43);
+		btnChuyenBan.setFont(new Font("Dialog", Font.BOLD, 15));
+		btnChuyenBan.setBounds(310, 684, 140, 43);
 		btnChuyenBan.setBackground(new Color(59, 130, 246));
 		btnChuyenBan.setForeground(Color.WHITE);
 		btnChuyenBan.setFocusPainted(false);
@@ -348,7 +384,14 @@ public class panelTang1 extends JPanel {
 		panel.add(lblDanhSachMon);
 
 		DefaultTableModel model = new DefaultTableModel(new Object[][] {},
-				new String[] { "Tên món ăn", "Số lượng", "Giá", "Thành tiền" });
+				new String[] { "Tên món ăn", "Số lượng", "Giá", "Thành tiền", "Xóa" }) {
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public boolean isCellEditable(int row, int column) {
+				return column == 4; // Only the delete button column is editable
+			}
+		};
 		table = new JTable(model);
 		table.setFont(new Font("Roboto", Font.PLAIN, 14));
 		table.setRowHeight(30);
@@ -359,28 +402,41 @@ public class panelTang1 extends JPanel {
 		table.getTableHeader().setFont(new Font("Roboto", Font.BOLD, 14));
 		table.getTableHeader().setBackground(new Color(243, 244, 246));
 		table.getTableHeader().setForeground(new Color(17, 24, 39));
-		
-		System.out.println(maKH);
+
+		// Set column widths
+		table.getColumnModel().getColumn(0).setPreferredWidth(100); // Tên món ăn
+		table.getColumnModel().getColumn(1).setPreferredWidth(80); // Số lượng
+		table.getColumnModel().getColumn(2).setPreferredWidth(80); // Giá
+		table.getColumnModel().getColumn(3).setPreferredWidth(90); // Thành tiền
+		table.getColumnModel().getColumn(4).setPreferredWidth(60); // Xóa
+
+		// Add delete button renderer and editor
+		table.getColumnModel().getColumn(4).setCellRenderer(new ButtonRenderer());
+		table.getColumnModel().getColumn(4).setCellEditor(new ButtonEditor(new JCheckBox(), table, tenBan, this));
+
 		if (maKH != null) {
 			hoaDon_DAO = new DAO_HoaDon();
 			String maHD = hoaDon_DAO.getMaHDByMaKHAndStatus(maKH, "Chưa thanh toán");
-			System.out.println(maHD);
 			if (maHD != null) {
 				CTHD_DAO = new DAO_CTHoaDon();
 				monAn_DAO = new DAO_MonAn();
 				List<CTHoaDon> dsachCTHD = CTHD_DAO.getCTHDByMaHD(maHD);
-				for (CTHoaDon row : dsachCTHD) {
-					String maMonAn = row.getMaMonAn(); 
-					int soLuongMon = row.getSoLuong();
-					MonAn monAn = monAn_DAO.getMonAnByMa(maMonAn);
-					if (monAn != null) {
-						double gia = monAn.getGia();
-						model.addRow(new Object[] { 
-								monAn.getTenMonAn(), 
-								soLuongMon, 
-								gia, 
-								soLuongMon * gia });
+				if (dsachCTHD != null) {
+					for (CTHoaDon row : dsachCTHD) {
+						String maMonAn = row.getMaMonAn();
+						int soLuongMon = row.getSoLuong();
+						MonAn monAn = monAn_DAO.getMonAnByMa(maMonAn);
+						if (monAn != null) {
+							int gia = (int) monAn.getGia();
+							model.addRow(
+									new Object[] { monAn.getTenMonAn(), soLuongMon, gia, soLuongMon * gia, "Xóa" });
+						}
 					}
+				}
+				if (dsachCTHD == null || dsachCTHD.isEmpty()) {
+					table.setEnabled(false);
+				} else {
+					table.setEnabled(true);
 				}
 			}
 		}
@@ -434,6 +490,32 @@ public class panelTang1 extends JPanel {
 			@Override
 			public void mouseExited(MouseEvent e) {
 				btnThanhToan.setBackground(new Color(16, 185, 129));
+			}
+		});
+		btnThanhToan.addActionListener(e -> {
+			try {
+				String tienCanTraText = txt_tienCanTra.getText();
+				if (tienCanTraText == null || tienCanTraText.isEmpty() || Integer.parseInt(tienCanTraText) <= 0) {
+					JOptionPane.showMessageDialog(panelTang1.this, "Số tiền cần thanh toán không hợp lệ!");
+					return;
+				}
+				long amount = Long.parseLong(tienCanTraText);
+
+				if (maKH == null) {
+					JOptionPane.showMessageDialog(panelTang1.this, "Không tìm thấy thông tin khách hàng!");
+					return;
+				}
+
+				hoaDon_DAO = new DAO_HoaDon();
+				String maHD = hoaDon_DAO.getMaHDByMaKHAndStatus(maKH, "Chưa thanh toán");
+				if (maHD == null) {
+					JOptionPane.showMessageDialog(panelTang1.this, "Không tìm thấy hóa đơn!");
+					return;
+				}
+
+				showPaymentMethodDialog(tenBan, maKH, maHD, amount);
+			} catch (NumberFormatException ex) {
+				JOptionPane.showMessageDialog(panelTang1.this, "Số tiền không hợp lệ!");
 			}
 		});
 		panel.add(btnThanhToan);
@@ -512,6 +594,477 @@ public class panelTang1 extends JPanel {
 
 		panel_ChiTietBan.revalidate();
 		panel_ChiTietBan.repaint();
+	}
+
+	private void showPaymentMethodDialog(String tenBan, String maKH, String maHD, long amount) {
+		JDialog dialog = new JDialog(SwingUtilities.getWindowAncestor(this), "Chọn Phương Thức Thanh Toán",
+				Dialog.ModalityType.APPLICATION_MODAL);
+		dialog.setLayout(null);
+		dialog.setSize(400, 300);
+		dialog.setLocationRelativeTo(null);
+		dialog.setUndecorated(true);
+
+		JLabel lblTitle = new JLabel("CHỌN PHƯƠNG THỨC THANH TOÁN");
+		lblTitle.setBounds(0, 20, 400, 30);
+		lblTitle.setFont(new Font("Roboto", Font.BOLD, 18));
+		lblTitle.setForeground(new Color(17, 24, 39));
+		lblTitle.setHorizontalAlignment(SwingConstants.CENTER);
+		dialog.add(lblTitle);
+
+		String[] paymentMethods = { "Chọn phương thức thanh toán", "Tiền mặt", "Chuyển khoản ngân hàng", "Ví điện tử Momo" };
+		JComboBox<String> comboPTTT = new JComboBox<>(paymentMethods);
+		comboPTTT.setBounds(50, 60, 300, 40);
+		comboPTTT.setFont(new Font("Roboto", Font.PLAIN, 14));
+		comboPTTT.setBackground(Color.WHITE);
+		dialog.add(comboPTTT);
+
+		JLabel lblCashAmount = new JLabel("SỐ TIỀN KHÁCH ĐƯA:");
+		lblCashAmount.setBounds(50, 110, 150, 30);
+		lblCashAmount.setFont(new Font("Roboto", Font.PLAIN, 14));
+		lblCashAmount.setVisible(false);
+		dialog.add(lblCashAmount);
+
+		JTextField txtCashAmount = new JTextField();
+		txtCashAmount.setBounds(200, 110, 150, 30);
+		txtCashAmount.setFont(new Font("Roboto", Font.PLAIN, 14));
+		txtCashAmount.setBorder(BorderFactory.createLineBorder(new Color(229, 231, 235)));
+		txtCashAmount.setVisible(false);
+		dialog.add(txtCashAmount);
+
+		JButton btnCancel = new JButton("HỦY");
+		btnCancel.setBounds(50, 200, 150, 40);
+		btnCancel.setFont(new Font("Roboto", Font.BOLD, 14));
+		btnCancel.setBackground(new Color(239, 68, 68));
+		btnCancel.setForeground(Color.WHITE);
+		btnCancel.setFocusPainted(false);
+		btnCancel.setBorderPainted(false);
+		btnCancel.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseEntered(MouseEvent e) {
+				btnCancel.setBackground(new Color(220, 38, 38));
+			}
+
+			@Override
+			public void mouseExited(MouseEvent e) {
+				btnCancel.setBackground(new Color(239, 68, 68));
+			}
+		});
+		btnCancel.addActionListener(e -> dialog.dispose());
+		dialog.add(btnCancel);
+
+		JButton btnConfirm = new JButton("XÁC NHẬN");
+		btnConfirm.setBounds(200, 200, 150, 40);
+		btnConfirm.setFont(new Font("Roboto", Font.BOLD, 14));
+		btnConfirm.setBackground(new Color(34, 197, 94));
+		btnConfirm.setForeground(Color.WHITE);
+		btnConfirm.setFocusPainted(false);
+		btnConfirm.setBorderPainted(false);
+		btnConfirm.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseEntered(MouseEvent e) {
+				btnConfirm.setBackground(new Color(22, 163, 74));
+			}
+
+			@Override
+			public void mouseExited(MouseEvent e) {
+				btnConfirm.setBackground(new Color(34, 197, 94));
+			}
+		});
+
+		comboPTTT.addActionListener(e -> {
+			String selectedMethod = (String) comboPTTT.getSelectedItem();
+			boolean isCash = selectedMethod.equals("Tiền mặt");
+			lblCashAmount.setVisible(isCash);
+			txtCashAmount.setVisible(isCash);
+		});
+
+		btnConfirm.addActionListener(e -> {
+			String selectedMethod = (String) comboPTTT.getSelectedItem();
+			try {
+				if (selectedMethod.equals("Tiền mặt")) {
+					String cashInput = txtCashAmount.getText().trim();
+					if (cashInput.isEmpty()) {
+						JOptionPane.showMessageDialog(dialog, "Vui lòng nhập số tiền khách đưa!");
+						return;
+					}
+					long cashAmount;
+					try {
+						cashAmount = Long.parseLong(cashInput);
+					} catch (NumberFormatException ex) {
+						JOptionPane.showMessageDialog(dialog, "Số tiền không hợp lệ!");
+						return;
+					}
+					if (cashAmount < amount) {
+						JOptionPane.showMessageDialog(dialog, "Số tiền khách đưa không đủ!");
+						return;
+					}
+					long change = cashAmount - amount;
+					hoaDon_DAO.capNhatTrangThaiHoaDon(maHD, "Đã thanh toán");
+					Ban_DAO.capNhatTrangThaiBan(tenBan, "CÒN TRỐNG");
+					JOptionPane.showMessageDialog(dialog,
+							"Thanh toán thành công!\n" + "Phương thức: " + selectedMethod + "\n" + "Số tiền cần trả: "
+									+ amount + "\n" + "Số tiền khách đưa: " + cashAmount + "\n" + "Tiền thối: "
+									+ change);
+					refreshBanList();
+					panel_ChiTietBan.setVisible(false);
+					panel_Ban.setVisible(true);
+					dialog.dispose();
+				} else if (selectedMethod.equals("Ví điện tử Momo")) {
+					generateAndShowQRCode(tenBan);
+					dialog.dispose();
+				} else if (selectedMethod.equals("Chuyển khoản ngân hàng")) {
+					generateAndShowBank(tenBan);
+					dialog.dispose();
+				}
+			} catch (SQLException ex) {
+				ex.printStackTrace();
+				JOptionPane.showMessageDialog(dialog, "Lỗi khi cập nhật dữ liệu: " + ex.getMessage());
+			} catch (Exception ex) {
+				ex.printStackTrace();
+				JOptionPane.showMessageDialog(dialog, "Lỗi khi tạo mã QR: " + ex.getMessage());
+			}
+		});
+		dialog.add(btnConfirm);
+
+		dialog.setVisible(true);
+	}
+
+	private void generateAndShowBank(String tenBan) throws Exception {
+		// MB Bank account details
+		String bankBIN = "970422";
+		String accountNumber = "0923358221";
+		long amount = Long.parseLong(txt_tienCanTra.getText());
+		String content = "Thanh toan ban " + tenBan.replaceAll("[^a-zA-Z0-9]", "");
+
+		// Validate inputs
+		if (accountNumber.length() < 6 || accountNumber.length() > 19) {
+			throw new IllegalArgumentException("Account number must be 6-19 digits");
+		}
+		if (amount <= 0) {
+			throw new IllegalArgumentException("Amount must be greater than 0");
+		}
+		if (content.length() > 100) {
+			content = content.substring(0, 100); // Truncate to 100 chars
+		}
+
+		// Construct VietQR string
+		String qrCodeText = constructVietQRString(bankBIN, accountNumber, amount, content);
+		System.out.println("VietQR Payload: " + qrCodeText); // For debugging
+
+		// Set QR code dimensions
+		int width = 300;
+		int height = 300;
+
+		// Generate QR code
+		QRCodeWriter qrCodeWriter = new QRCodeWriter();
+		BitMatrix bitMatrix = qrCodeWriter.encode(qrCodeText, BarcodeFormat.QR_CODE, width, height);
+		BufferedImage qrImage = MatrixToImageWriter.toBufferedImage(bitMatrix);
+
+		// Load and resize MB Bank logo (optional)
+		BufferedImage logo = null;
+		try {
+			java.net.URL logoURL = getClass().getResource("logo_mb_bank.png");
+			logo = ImageIO.read(logoURL);
+			logo = resizeImage(logo, 48, 48); // Reduced size to avoid obscuring QR code
+			// Overlay logo
+			Graphics2D g = qrImage.createGraphics();
+			int x = (qrImage.getWidth() - logo.getWidth()) / 2;
+			int y = (qrImage.getHeight() - logo.getHeight()) / 2;
+			g.drawImage(logo, x, y, null);
+			g.dispose();
+		} catch (IOException e) {
+			System.err.println("Warning: Could not load MB Bank logo: " + e.getMessage());
+		}
+
+		// Save QR code to temporary file
+		String filePath = "qrcode_mb_" + tenBan + "_" + System.currentTimeMillis() + ".png";
+		File file = new File(filePath);
+		try {
+			ImageIO.write(qrImage, "PNG", file);
+		} catch (IOException e) {
+			throw new Exception("Failed to save QR code image: " + e.getMessage());
+		}
+
+		// Display QR code in dialog
+		JDialog qrDialog = new JDialog(SwingUtilities.getWindowAncestor(this), "Mã QR Thanh Toán MB Bank",
+				Dialog.ModalityType.APPLICATION_MODAL);
+		qrDialog.setLayout(new BorderLayout());
+		qrDialog.setSize(350, 450);
+		qrDialog.setLocationRelativeTo(null);
+
+		JLabel qrLabel = new JLabel(new ImageIcon(filePath));
+		qrLabel.setHorizontalAlignment(SwingConstants.CENTER);
+		qrDialog.add(qrLabel, BorderLayout.CENTER);
+
+		JLabel instructionLabel = new JLabel("Quét mã QR bằng ứng dụng MB Bank");
+		instructionLabel.setHorizontalAlignment(SwingConstants.CENTER);
+		instructionLabel.setFont(new Font("Roboto", Font.PLAIN, 14));
+		instructionLabel.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
+		qrDialog.add(instructionLabel, BorderLayout.NORTH);
+
+		// Button panel
+		JPanel buttonPanel = new JPanel();
+		buttonPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 10, 10));
+		buttonPanel.setBackground(Color.WHITE);
+
+		// Confirm Payment button
+		JButton confirmButton = new JButton("XÁC NHẬN ĐÃ THANH TOÁN");
+		confirmButton.setFont(new Font("Roboto", Font.BOLD, 14));
+		confirmButton.setBackground(new Color(34, 197, 94));
+		confirmButton.setForeground(Color.WHITE);
+		confirmButton.setFocusPainted(false);
+		confirmButton.setBorderPainted(false);
+		confirmButton.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseEntered(MouseEvent e) {
+				confirmButton.setBackground(new Color(22, 163, 74));
+			}
+
+			@Override
+			public void mouseExited(MouseEvent e) {
+				confirmButton.setBackground(new Color(34, 197, 94));
+			}
+		});
+		confirmButton.addActionListener(e -> {
+			try {
+				String maBan = Ban_DAO.getMaBanByTenBan(tenBan);
+				String maKH = getMaKHFromPhieuDatBan(maBan);
+				String maHD = hoaDon_DAO.getMaHDByMaKHAndStatus(maKH, "Chưa thanh toán");
+				hoaDon_DAO.capNhatTrangThaiHoaDon(maHD, "Đã thanh toán");
+				Ban_DAO.capNhatTrangThaiBan(tenBan, "CÒN TRỐNG");
+				JOptionPane.showMessageDialog(qrDialog, "Thanh toán qua MB Bank thành công!\nSố tiền: " + amount);
+				refreshBanList();
+				panel_ChiTietBan.setVisible(false);
+				panel_Ban.setVisible(true);
+				qrDialog.dispose();
+			} catch (SQLException ex) {
+				ex.printStackTrace();
+				JOptionPane.showMessageDialog(qrDialog, "Lỗi khi cập nhật dữ liệu: " + ex.getMessage());
+			}
+		});
+		buttonPanel.add(confirmButton);
+
+		// Cancel button
+		JButton cancelButton = new JButton("HỦY");
+		cancelButton.setFont(new Font("Roboto", Font.BOLD, 14));
+		cancelButton.setBackground(new Color(239, 68, 68));
+		cancelButton.setForeground(Color.WHITE);
+		cancelButton.setFocusPainted(false);
+		cancelButton.setBorderPainted(false);
+		cancelButton.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseEntered(MouseEvent e) {
+				cancelButton.setBackground(new Color(220, 38, 38));
+			}
+
+			@Override
+			public void mouseExited(MouseEvent e) {
+				cancelButton.setBackground(new Color(239, 68, 68));
+			}
+		});
+		cancelButton.addActionListener(e -> {
+			qrDialog.dispose();
+		});
+		buttonPanel.add(cancelButton);
+
+		qrDialog.add(buttonPanel, BorderLayout.SOUTH);
+
+		// Set dialog icon
+		try {
+			java.net.URL iconURL = getClass().getResource("mb_bank_logo.png");
+			if (iconURL != null) {
+				qrDialog.setIconImage(new ImageIcon(iconURL).getImage());
+			}
+		} catch (Exception e) {
+			System.err.println("Warning: Could not set dialog icon: " + e.getMessage());
+		}
+
+		qrDialog.setVisible(true);
+
+		// Delete temporary file when dialog closes
+		qrDialog.addWindowListener(new java.awt.event.WindowAdapter() {
+			@Override
+			public void windowClosed(java.awt.event.WindowEvent e) {
+				if (file.exists()) {
+					file.delete();
+				}
+			}
+		});
+	}
+
+	private String constructVietQRString(String bankBIN, String accountNumber, long amount, String content) {
+		// VietQR format components
+		String version = "000201"; // Version
+		String initMethod = "010212"; // Dynamic QR
+		String guid = "0010A000000727"; // GUID
+		String orgField = "0208QRIBFTTA"; // QRIBFTTA for VietQR
+		String bankInfo = String.format("01%02d%s%s", bankBIN.length() + accountNumber.length(), bankBIN,
+				accountNumber);
+		String consumerInfo = String.format("38%02d%s", bankInfo.length() + guid.length() + orgField.length(),
+				guid + bankInfo + orgField);
+		String serviceCode = "52040000"; // Merchant category code
+		String currency = "5303704"; // VND
+		String amountStr = String.format("54%02d%s", String.valueOf(amount).length(), amount); // Amount
+		String purpose = String.format("08%02d%s", content.length(), content); // Transaction purpose
+		String additionalData = String.format("62%02d%s", purpose.length(), purpose);
+		String countryCode = "5802VN"; // Vietnam
+		String checksumPlaceholder = "6304"; // Checksum placeholder
+
+		// Combine payload without checksum
+		String payload = version + initMethod + consumerInfo + serviceCode + currency + amountStr + additionalData
+				+ countryCode;
+
+		// Calculate CRC-16 checksum
+		String checksum = calculateCRC16(payload + checksumPlaceholder);
+		payload += checksumPlaceholder + checksum;
+
+		return payload;
+	}
+
+	private String calculateCRC16(String data) {
+		int crc = 0xFFFF;
+		byte[] bytes = data.getBytes(StandardCharsets.UTF_8);
+		for (byte b : bytes) {
+			crc ^= (b & 0xFF);
+			for (int i = 0; i < 8; i++) {
+				if ((crc & 0x0001) != 0) {
+					crc >>= 1;
+					crc ^= 0x8408; // CRC-16-CCITT polynomial
+				} else {
+					crc >>= 1;
+				}
+			}
+		}
+		return String.format("%04X", crc).toUpperCase();
+	}
+
+	private void generateAndShowQRCode(String tenBan) throws Exception {
+		String momoPhone = "0923358221";
+		String name = "Nguyen Tan";
+		String email = "nguyentan5434@gmail.com";
+		long amount = Long.parseLong(txt_tienCanTra.getText());
+		String qrCodeText = String.format("2|99|%s|%s|%s|0|0|%d", momoPhone, name, email, amount);
+
+		int width = 300;
+		int height = 300;
+
+		QRCodeWriter qrCodeWriter = new QRCodeWriter();
+		BitMatrix bitMatrix = qrCodeWriter.encode(qrCodeText, BarcodeFormat.QR_CODE, width, height);
+		BufferedImage qrImage = MatrixToImageWriter.toBufferedImage(bitMatrix);
+
+		BufferedImage logo = ImageIO.read(getClass().getResource("logo_momo.jpg"));
+		logo = resizeImage(logo, 64, 64);
+
+		Graphics2D g = qrImage.createGraphics();
+		int x = (qrImage.getWidth() - logo.getWidth()) / 2;
+		int y = (qrImage.getHeight() - logo.getHeight()) / 2;
+		g.drawImage(logo, x, y, null);
+		g.dispose();
+
+		String filePath = "qrcode_" + tenBan + ".png";
+		File file = new File(filePath);
+		ImageIO.write(qrImage, "PNG", file);
+
+		JDialog qrDialog = new JDialog(SwingUtilities.getWindowAncestor(this), "Mã QR Thanh Toán",
+				Dialog.ModalityType.APPLICATION_MODAL);
+		qrDialog.setLayout(new BorderLayout());
+		qrDialog.setSize(350, 450);
+		qrDialog.setLocationRelativeTo(null);
+
+		JLabel qrLabel = new JLabel(new ImageIcon(filePath));
+		qrLabel.setHorizontalAlignment(SwingConstants.CENTER);
+		qrDialog.add(qrLabel, BorderLayout.CENTER);
+
+		java.net.URL iconURL = getClass().getResource("momo_logo.jpg");
+		ImageIcon icon = new ImageIcon(iconURL);
+		qrDialog.setIconImage(icon.getImage());
+
+		JLabel instructionLabel = new JLabel("Quét mã QR bằng ứng dụng MoMo để thanh toán");
+		instructionLabel.setHorizontalAlignment(SwingConstants.CENTER);
+		instructionLabel.setFont(new Font("Roboto", Font.PLAIN, 14));
+		qrDialog.add(instructionLabel, BorderLayout.NORTH);
+
+		JPanel buttonPanel = new JPanel();
+		buttonPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 10, 10));
+		buttonPanel.setBackground(Color.WHITE);
+
+		JButton confirmButton = new JButton("XÁC NHẬN ĐÃ THANH TOÁN");
+		confirmButton.setFont(new Font("Roboto", Font.BOLD, 14));
+		confirmButton.setBackground(new Color(34, 197, 94));
+		confirmButton.setForeground(Color.WHITE);
+		confirmButton.setFocusPainted(false);
+		confirmButton.setBorderPainted(false);
+		confirmButton.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseEntered(MouseEvent e) {
+				confirmButton.setBackground(new Color(22, 163, 74));
+			}
+
+			@Override
+			public void mouseExited(MouseEvent e) {
+				confirmButton.setBackground(new Color(34, 197, 94));
+			}
+		});
+		confirmButton.addActionListener(e -> {
+			try {
+				String maBan = Ban_DAO.getMaBanByTenBan(tenBan);
+				String maKH = getMaKHFromPhieuDatBan(maBan);
+				String maHD = hoaDon_DAO.getMaHDByMaKHAndStatus(maKH, "Chưa thanh toán");
+				hoaDon_DAO.capNhatTrangThaiHoaDon(maHD, "Đã thanh toán");
+				Ban_DAO.capNhatTrangThaiBan(tenBan, "CÒN TRỐNG");
+				JOptionPane.showMessageDialog(qrDialog, "Thanh toán qua Momo thành công!\nSố tiền: " + amount);
+				refreshBanList();
+				panel_ChiTietBan.setVisible(false);
+				panel_Ban.setVisible(true);
+				qrDialog.dispose();
+			} catch (SQLException ex) {
+				ex.printStackTrace();
+				JOptionPane.showMessageDialog(qrDialog, "Lỗi khi cập nhật dữ liệu: " + ex.getMessage());
+			}
+		});
+		buttonPanel.add(confirmButton);
+
+		JButton cancelButton = new JButton("HỦY");
+		cancelButton.setFont(new Font("Roboto", Font.BOLD, 14));
+		cancelButton.setBackground(new Color(239, 68, 68));
+		cancelButton.setForeground(Color.WHITE);
+		cancelButton.setFocusPainted(false);
+		cancelButton.setBorderPainted(false);
+		cancelButton.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseEntered(MouseEvent e) {
+				cancelButton.setBackground(new Color(220, 38, 38));
+			}
+
+			@Override
+			public void mouseExited(MouseEvent e) {
+				cancelButton.setBackground(new Color(239, 68, 68));
+			}
+		});
+		cancelButton.addActionListener(e -> {
+			qrDialog.dispose();
+		});
+		buttonPanel.add(cancelButton);
+
+		qrDialog.add(buttonPanel, BorderLayout.SOUTH);
+
+		qrDialog.setVisible(true);
+
+		qrDialog.addWindowListener(new java.awt.event.WindowAdapter() {
+			@Override
+			public void windowClosed(java.awt.event.WindowEvent e) {
+				file.delete();
+			}
+		});
+	}
+
+	private BufferedImage resizeImage(BufferedImage originalImage, int newWidth, int newHeight) {
+		BufferedImage resizedImage = new BufferedImage(newWidth, newHeight, BufferedImage.TYPE_INT_ARGB);
+		Graphics2D g = resizedImage.createGraphics();
+		g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+		g.drawImage(originalImage, 0, 0, newWidth, newHeight, null);
+		g.dispose();
+		return resizedImage;
 	}
 
 	private void showMenuPanel(String tenBan) throws Exception {
@@ -644,7 +1197,7 @@ public class panelTang1 extends JPanel {
 			lblName.setHorizontalAlignment(SwingConstants.CENTER);
 			dishPanel.add(lblName);
 
-			JLabel lblPrice = new JLabel(String.format("%.0f VNĐ", monAn.getGia()));
+			JLabel lblPrice = new JLabel(String.format("%d VNĐ", (int) monAn.getGia()));
 			lblPrice.setBounds(0, 150, 180, 20);
 			lblPrice.setFont(new Font("Roboto", Font.PLAIN, 14));
 			lblPrice.setForeground(new Color(55, 65, 81));
@@ -682,8 +1235,8 @@ public class panelTang1 extends JPanel {
 						JOptionPane.showMessageDialog(panelTang1.this, "Số lượng phải lớn hơn 0!");
 						return;
 					}
-					double price = monAn.getGia();
-					double total = quantity * price;
+					int price = (int) monAn.getGia();
+					int total = quantity * price;
 
 					Ban_DAO = new DAO_Ban();
 					String maBan = Ban_DAO.getMaBanByTenBan(tenBan);
@@ -727,7 +1280,7 @@ public class panelTang1 extends JPanel {
 						}
 					}
 					if (!found) {
-						model.addRow(new Object[] { monAn.getTenMonAn(), quantity, price, total });
+						model.addRow(new Object[] { monAn.getTenMonAn(), quantity, price, total, "Xóa" });
 					}
 
 					Ban_DAO.capNhatTrangThaiBan(tenBan, "ĐANG SỬ DỤNG");
@@ -791,24 +1344,26 @@ public class panelTang1 extends JPanel {
 
 	private void updateTotal() {
 		DefaultTableModel model = (DefaultTableModel) table.getModel();
-		double tongCong = 0;
-		for (int i = 0; i < model.getRowCount(); i++) {
-			tongCong += (double) model.getValueAt(i, 3);
+		int tongCong = 0;
+		if (model.getRowCount() > 0) {
+			for (int i = 0; i < model.getRowCount(); i++) {
+				tongCong += (int) model.getValueAt(i, 3);
+			}
 		}
-		txt_tongCong.setText(String.format("%.0f", tongCong));
+		txt_tongCong.setText(String.valueOf(tongCong));
 
-		double vatPercentage = 0.08; 
-		double vat = tongCong * vatPercentage;
-		txt_VAT.setText(String.format("%.0f", vat));
+		double vatPercentage = 0.08;
+		int vat = (int) (tongCong * vatPercentage);
+		txt_VAT.setText(String.valueOf(vat));
 
 		double khuyenMai = 0;
 		String khuyenMaiText = (String) comboKM.getSelectedItem();
-		if (!khuyenMaiText.equals("Không có")) {
+		if (khuyenMaiText != null && !khuyenMaiText.equals("Không có")) {
 			khuyenMai = Double.parseDouble(khuyenMaiText.replace("%", "")) / 100;
 		}
 
-		double tienCanTra = (tongCong + vat) * (1 - khuyenMai);
-		txt_tienCanTra.setText(String.format("%.0f", tienCanTra));
+		int tienCanTra = (int) ((tongCong + vat) * (1 - khuyenMai));
+		txt_tienCanTra.setText(String.valueOf(tienCanTra));
 	}
 
 	private static class RoundedPanel extends JPanel {
@@ -857,6 +1412,147 @@ public class panelTang1 extends JPanel {
 			g2.setColor(getBackground());
 			g2.fill(new RoundRectangle2D.Double(0, 0, getWidth() - shadowSize, getHeight() - shadowSize, arc, arc));
 			g2.dispose();
+		}
+	}
+
+	private static class ButtonRenderer extends JButton implements TableCellRenderer {
+		public ButtonRenderer() {
+			setOpaque(true);
+			setFont(new Font("Roboto", Font.BOLD, 12));
+			setBackground(new Color(239, 68, 68));
+			setForeground(Color.WHITE);
+			setFocusPainted(false);
+			setBorderPainted(false);
+		}
+
+		@Override
+		public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus,
+				int row, int column) {
+			setText((value == null) ? "Xóa" : value.toString());
+			return this;
+		}
+	}
+
+	private static class ButtonEditor extends DefaultCellEditor {
+		private JButton button;
+		private String label;
+		private boolean isPushed;
+		private JTable table;
+		private panelTang1 panel;
+		private String tenBan;
+		private int row;
+
+		public ButtonEditor(JCheckBox checkBox, JTable table, String tenBan, panelTang1 panel) {
+			super(checkBox);
+			this.table = table;
+			this.tenBan = tenBan;
+			this.panel = panel;
+			button = new JButton();
+			button.setOpaque(true);
+			button.setFont(new Font("Roboto", Font.BOLD, 12));
+			button.setBackground(new Color(239, 68, 68));
+			button.setForeground(Color.WHITE);
+			button.setFocusPainted(false);
+			button.setBorderPainted(false);
+			button.addActionListener(e -> {
+				isPushed = true;
+				try {
+					fireEditingStopped();
+				} catch (Exception e2) {
+					e2.printStackTrace();
+				}
+			});
+		}
+
+		@Override
+		public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row,
+				int column) {
+			this.row = row;
+			label = (value == null) ? "Xóa" : value.toString();
+			button.setText(label);
+			isPushed = false;
+			return button;
+		}
+
+		@Override
+		public Object getCellEditorValue() {
+			if (isPushed && row >= 0 && row < table.getRowCount()) {
+				int confirm = JOptionPane.showConfirmDialog(panel, "Bạn có muốn xóa món này khỏi danh sách?",
+						"Xác Nhận Xóa", JOptionPane.YES_NO_OPTION);
+				if (confirm == JOptionPane.YES_OPTION) {
+					DefaultTableModel model = (DefaultTableModel) table.getModel();
+					String tenMonAn = (String) model.getValueAt(row, 0);
+					try {
+						if (table.isEditing()) {
+							table.getCellEditor().stopCellEditing();
+						}
+
+						panel.Ban_DAO = new DAO_Ban();
+						String maBan = panel.Ban_DAO.getMaBanByTenBan(tenBan);
+						if (maBan == null) {
+							JOptionPane.showMessageDialog(panel, "Không tìm thấy mã bàn!");
+							return label;
+						}
+
+						String maKH = panel.getMaKHFromPhieuDatBan(maBan);
+						if (maKH == null) {
+							JOptionPane.showMessageDialog(panel, "Không tìm thấy khách hàng!");
+							return label;
+						}
+
+						panel.hoaDon_DAO = new DAO_HoaDon();
+						String maHD = panel.hoaDon_DAO.getMaHDByMaKHAndStatus(maKH, "Chưa thanh toán");
+						if (maHD == null) {
+							JOptionPane.showMessageDialog(panel, "Không tìm thấy hóa đơn!");
+							return label;
+						}
+
+						panel.monAn_DAO = new DAO_MonAn();
+						MonAn monAn = panel.monAn_DAO.getMonAnByTen(tenMonAn);
+						if (monAn == null) {
+							JOptionPane.showMessageDialog(panel, "Không tìm thấy món ăn!");
+							return label;
+						}
+
+						panel.CTHD_DAO = new DAO_CTHoaDon();
+						boolean isDeleted = panel.CTHD_DAO.xoaCTHD(maHD, monAn.getMaMonAn());
+						if (!isDeleted) {
+							JOptionPane.showMessageDialog(panel, "Không thể xóa món khỏi hóa đơn!");
+							return label;
+						}
+
+						model.removeRow(row);
+						panel.updateTotal();
+
+						if (model.getRowCount() == 0) {
+							panel.Ban_DAO.capNhatTrangThaiBan(tenBan, "ĐÃ ĐẶT");
+							panel.btnHuyBan.setEnabled(true);
+							panel.btnHuyBan.setBackground(new Color(239, 68, 68));
+						}
+
+						panel.refreshBanList();
+						JOptionPane.showMessageDialog(panel, "Xóa món thành công!");
+					} catch (SQLException ex) {
+						ex.printStackTrace();
+						JOptionPane.showMessageDialog(panel, "Lỗi cơ sở dữ liệu: " + ex.getMessage());
+					}
+				}
+			} else if (isPushed) {
+				JOptionPane.showMessageDialog(panel, "Hàng không hợp lệ hoặc không được chọn!");
+			}
+			isPushed = false;
+			return label;
+		}
+
+		@Override
+		public boolean stopCellEditing() {
+			isPushed = false;
+			return super.stopCellEditing();
+		}
+
+		@Override
+		protected void fireEditingStopped() {
+			super.fireEditingStopped();
 		}
 	}
 }
