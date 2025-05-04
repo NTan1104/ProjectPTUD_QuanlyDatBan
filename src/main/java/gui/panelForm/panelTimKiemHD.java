@@ -3,20 +3,35 @@ package gui.panelForm;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
-import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Image;
 import java.awt.RenderingHints;
 import java.awt.SystemColor;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.geom.RoundRectangle2D;
+import java.awt.print.PageFormat;
+import java.awt.print.Printable;
+import java.awt.print.PrinterException;
+import java.awt.print.PrinterJob;
+import java.sql.SQLException;
+import java.text.DecimalFormat;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 import javax.swing.BorderFactory;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
@@ -26,125 +41,142 @@ import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.JTableHeader;
 
 import com.formdev.flatlaf.FlatIntelliJLaf;
 import com.formdev.flatlaf.FlatLaf;
 import com.formdev.flatlaf.fonts.roboto.FlatRobotoFont;
+import com.toedter.calendar.JDateChooser;
+
+import dao.DAO_CTHoaDon;
+import dao.DAO_HoaDon;
+import entity.CTHoaDon;
+import entity.HoaDon;
+import java.time.format.DateTimeFormatter;
 
 public class panelTimKiemHD extends JPanel {
     private static final long serialVersionUID = 1L;
     private JTable table;
     private DefaultTableModel tableModel;
-    private JTextField txtMaHD, txtTenKH ;
-    private JComboBox<String> cbThoiGian, cbTrangThai,cbGia;
-    private JLabel lblNewLabel;
-    private JLabel lblNewLabel_1;
-    private JTextField txtMBn;
+    private JTextField txtMaHD, txtMaKH, txtMBan, txtSDT;
+    private JComboBox<String> cbTrangThai;
+    private JDateChooser dateStart, dateEnd;
+    private JLabel lblMaHD, lblMaKH, lblMBan, lblSDT, lblDateStart, lblDateEnd, lblTrangThai, lblGia;
+    private JPanel detailPanel;
+    private JButton btnNewButton, btnSearch;
+    private RoundedScrollPane scrollPane;
+    private DAO_HoaDon daoHoaDon;
+    private DAO_CTHoaDon daoCTHoaDon;
+    private final double TAX_RATE = 0.08;
+    private final DecimalFormat df = new DecimalFormat("#,###");
+    private final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+    private JTextField txtDetailMaHD, txtNhanVien, txtPhongBan, txtKhachHang, txtDetailSDT, txtThoiGian, txtThue, txtTongTien;
+    private DefaultTableModel detailTableModel;
+    private JTable detailTable;
 
     public panelTimKiemHD() {
         setBackground(SystemColor.controlHighlight);
         setLayout(null);
         setSize(1535, 850);
-        
-        // Cài đặt font FlatLaf
+
+        daoHoaDon = new DAO_HoaDon();
+        daoCTHoaDon = new DAO_CTHoaDon();
+
         FlatRobotoFont.install();
         FlatLaf.registerCustomDefaultsSource("themes");
         FlatIntelliJLaf.setup();
         UIManager.put("defaultFont", new Font(FlatRobotoFont.FAMILY, Font.PLAIN, 13));
 
-        // Thanh tìm kiếm ngang
-        JPanel searchPanel = new JPanel();
-        searchPanel.setBounds(20, 50, 1500, 110);
+        JPanel searchPanel = new RoundedPane(20);
+        searchPanel.setBounds(13, 12, 1500, 110);
         searchPanel.setBackground(Color.WHITE);
         searchPanel.setBorder(BorderFactory.createLineBorder(Color.GRAY, 1));
+        searchPanel.setLayout(null);
+        add(searchPanel);
 
         txtMaHD = new JTextField(10);
         setupPlaceholder(txtMaHD, "Mã hóa đơn");
         txtMaHD.setBounds(108, 20, 194, 25);
+        searchPanel.add(txtMaHD);
 
-        txtTenKH = new JTextField(10);
-        setupPlaceholder(txtTenKH, "Tên khách hàng");
-        txtTenKH.setBounds(108, 66, 194, 25);
+        lblMaHD = new JLabel("Mã hóa đơn:");
+        lblMaHD.setBounds(10, 26, 88, 13);
+        searchPanel.add(lblMaHD);
 
-        txtMBn = new JTextField(10);
-        setupPlaceholder(txtMBn, "Mã bàn");
-        txtMBn.setBounds(352, 20, 168, 25);
+        txtMaKH = new JTextField(10);
+        setupPlaceholder(txtMaKH, "Mã khách hàng");
+        txtMaKH.setBounds(400, 20, 194, 25);
+        searchPanel.add(txtMaKH);
 
+        lblMaKH = new JLabel("Mã khách hàng:");
+        lblMaKH.setBounds(312, 26, 88, 13);
+        searchPanel.add(lblMaKH);
 
+        txtMBan = new JTextField(10);
+        setupPlaceholder(txtMBan, "Mã bàn");
+        txtMBan.setBounds(692, 20, 194, 25);
+        searchPanel.add(txtMBan);
 
+        lblMBan = new JLabel("Bàn:");
+        lblMBan.setBounds(604, 26, 88, 13);
+        searchPanel.add(lblMBan);
 
-        String[] thoiGianOptions = {"Toàn thời gian", "Hôm nay", "Tuần này", "Tháng này"};
-        cbThoiGian = new JComboBox<>(thoiGianOptions);
-        cbThoiGian.setBounds(633, 20, 168, 25);
+        txtSDT = new JTextField(10);
+        setupPlaceholder(txtSDT, "Số điện thoại");
+        txtSDT.setBounds(984, 20, 194, 25);
+        searchPanel.add(txtSDT);
+
+        lblSDT = new JLabel("SDT:");
+        lblSDT.setBounds(896, 26, 88, 13);
+        searchPanel.add(lblSDT);
+
+        dateStart = new JDateChooser();
+        dateStart.setDateFormatString("dd/MM/yyyy");
+        dateStart.setBounds(108, 66, 194, 25);
+        searchPanel.add(dateStart);
+
+        lblDateStart = new JLabel("Từ ngày:");
+        lblDateStart.setBounds(10, 72, 88, 13);
+        searchPanel.add(lblDateStart);
+
+        dateEnd = new JDateChooser();
+        dateEnd.setDateFormatString("dd/MM/yyyy");
+        dateEnd.setBounds(400, 66, 194, 25);
+        searchPanel.add(dateEnd);
+
+        lblDateEnd = new JLabel("Đến ngày:");
+        lblDateEnd.setBounds(312, 72, 88, 13);
+        searchPanel.add(lblDateEnd);
 
         String[] trangThaiOptions = {"Tất cả", "Chưa thanh toán", "Đã thanh toán"};
         cbTrangThai = new JComboBox<>(trangThaiOptions);
-        cbTrangThai.setBounds(917, 20, 161, 25);
-        
-        String[] giaOptions = {"Tất cả", "Cao nhất", "Thấp nhất"};
-        cbGia = new JComboBox<>(giaOptions);
-        cbGia.setBounds(1178, 20, 175, 25);
-
-        JButton btnSearch = new JButton(" Tìm kiếm");
-        btnSearch.setBounds(1390, 22, 89, 21);
-        btnSearch.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                System.out.println("Tìm kiếm: " + txtMaHD.getText());
-            }
-        });
-        searchPanel.setLayout(null);
-
-        searchPanel.add(txtMaHD);
-        searchPanel.add(txtTenKH);
-        searchPanel.add(txtMBn);
-        JLabel label = new JLabel("Thời gian:");
-        label.setBounds(550, 26, 73, 13);
-        searchPanel.add(label);
-        searchPanel.add(cbThoiGian);
-        JLabel label_1 = new JLabel("Trạng thái:");
-        label_1.setBounds(829, 26, 78, 13);
-        searchPanel.add(label_1);
+        cbTrangThai.setBounds(692, 66, 194, 25);
         searchPanel.add(cbTrangThai);
+
+        lblTrangThai = new JLabel("Trạng thái:");
+        lblTrangThai.setBounds(604, 72, 88, 13);
+        searchPanel.add(lblTrangThai);
+
+        lblGia = new JLabel("Giá:");
+        lblGia.setBounds(896, 72, 88, 13);
+        searchPanel.add(lblGia);
+
+        btnSearch = new JButton("Tìm kiếm");
+        btnSearch.setBounds(1350, 22, 100, 30);
+        btnSearch.addActionListener(e -> performSearch());
         searchPanel.add(btnSearch);
-        searchPanel.add(cbGia);
-        add(searchPanel);
-        
-        lblNewLabel = new JLabel("Mã hóa đơn:");
-        lblNewLabel.setBounds(10, 26, 73, 13);
-        searchPanel.add(lblNewLabel);
-        
-        lblNewLabel_1 = new JLabel("Tên khách hàng:");
-        lblNewLabel_1.setBounds(10, 72, 103, 13);
-        searchPanel.add(lblNewLabel_1);
-        
-        JLabel lblNewLabel_3 = new JLabel("Bàn:");
-        lblNewLabel_3.setBounds(322, 26, 45, 13);
-        searchPanel.add(lblNewLabel_3);
-        
-        
-        JLabel lblNewLabel_2 = new JLabel("Giá:");
-        lblNewLabel_2.setBounds(1112, 26, 45, 13);
-        searchPanel.add(lblNewLabel_2);
-        
 
-
-
-        // Tiêu đề
-        JLabel lblTitle = new JLabel("TÌM KIẾM HÓA ĐƠN");
-        lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 20));
-        lblTitle.setHorizontalAlignment(SwingConstants.CENTER);
-        lblTitle.setBounds(0, 10, 1535, 27);
-        add(lblTitle);
-
-        String[] columnNames = {"STT", "Mã hóa đơn", "Bàn", "Thời gian", "Khách hàng", "Trạng thái", "Tổng tiền", "Giá giảm", "Đã trả"};
-        DefaultTableModel tableModel = new DefaultTableModel(columnNames, 0) {
+        String[] columnNames = {"Mã hóa đơn", "Bàn", "Thời gian", "Khách hàng", "Trạng thái", "Tổng tiền", "Giá giảm", "Đã trả"};
+        tableModel = new DefaultTableModel(columnNames, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
-                return false; // Không cho chỉnh sửa bất kỳ ô nào
+                return false;
             }
         };
         table = new JTable(tableModel);
-        int[] columnWidths = {25, 100,25, 150, 120, 100, 100, 80, 100}; // Điều chỉnh theo nhu cầu
+        JTableHeader header = table.getTableHeader();
+        header.setFont(header.getFont().deriveFont(Font.BOLD));
+        int[] columnWidths = {100, 25, 175, 120, 100, 100, 80, 100};
         for (int i = 0; i < columnWidths.length; i++) {
             table.getColumnModel().getColumn(i).setPreferredWidth(columnWidths[i]);
         }
@@ -158,37 +190,433 @@ public class panelTimKiemHD extends JPanel {
         DefaultTableCellRenderer centreRenderer = new DefaultTableCellRenderer();
         rightRenderer.setHorizontalAlignment(SwingConstants.RIGHT);
         centreRenderer.setHorizontalAlignment(SwingConstants.CENTER);
-        // Áp dụng cho các cột cần căn phải
-        table.getColumnModel().getColumn(0).setCellRenderer(centreRenderer);
-        table.getColumnModel().getColumn(1).setCellRenderer(centreRenderer);
-        table.getColumnModel().getColumn(2).setCellRenderer(centreRenderer);
-        table.getColumnModel().getColumn(3).setCellRenderer(centreRenderer);
-        table.getColumnModel().getColumn(4).setCellRenderer(centreRenderer);
-        table.getColumnModel().getColumn(5).setCellRenderer(centreRenderer);
-        table.getColumnModel().getColumn(6).setCellRenderer(rightRenderer);
-        table.getColumnModel().getColumn(7).setCellRenderer(rightRenderer); 
-        table.getColumnModel().getColumn(8).setCellRenderer(rightRenderer); 
-        Object[][] data = {
-                {1, "HD001","B1", "29/3/2025", "Khách lẻ", "Đã thanh toán", 5600000, 550000, 4500000},
-                {2, "HD002","B2", "29/3/2025", "Giang", "Chưa thanh toán", 400000, 50000, 0}
-            };
+        for (int i = 0; i <= 4; i++) {
+            table.getColumnModel().getColumn(i).setCellRenderer(centreRenderer);
+        }
+        for (int i = 5; i <= 7; i++) {
+            table.getColumnModel().getColumn(i).setCellRenderer(rightRenderer);
+        }
 
-            for (Object[] row : data) {
-                tableModel.addRow(row);
-            }
-
-
-        RoundedScrollPane scrollPane = new RoundedScrollPane(table, 30);
-        scrollPane.setBounds(21, 170, 1500, 650);
+        scrollPane = new RoundedScrollPane(table, 30);
+        scrollPane.setBounds(13, 122, 1480, 705);
         scrollPane.setBackground(Color.WHITE);
         add(scrollPane);
-        
-        
+
+        ImageIcon originalIcon = new ImageIcon(getClass().getResource("/img/icons8-view-details-50.png"));
+        Image scaledImage = originalIcon.getImage().getScaledInstance(36, 36, Image.SCALE_SMOOTH);
+        ImageIcon resizedIcon = new ImageIcon(scaledImage);
+        btnNewButton = new JButton("");
+        btnNewButton.setIcon(resizedIcon);
+        btnNewButton.setBounds(1492, 147, 30, 36);
+        btnNewButton.addActionListener(e -> toggleDetailPanel());
+        add(btnNewButton);
+
+        detailPanel = new RoundedPane(30);
+        detailPanel.setLayout(null);
+        detailPanel.setBounds(1010, 122, 500, 705);
+        detailPanel.setBackground(Color.WHITE);
+        detailPanel.setVisible(false);
+        add(detailPanel);
+
+        JLabel lblTitle_1 = new JLabel("THÔNG TIN HÓA ĐƠN", SwingConstants.CENTER);
+        lblTitle_1.setFont(new Font("Arial", Font.BOLD, 18));
+        lblTitle_1.setBounds(100, 10, 300, 30);
+        detailPanel.add(lblTitle_1);
+
+        JLabel lblNhaHang = new JLabel("Nhà hàng: SERBUR");
+        lblNhaHang.setBounds(20, 50, 200, 25);
+        detailPanel.add(lblNhaHang);
+
+        JLabel lblDiaChi = new JLabel("Địa chỉ: 4 Nguyễn Văn Bảo, P5, Gò Vấp");
+        lblDiaChi.setBounds(20, 80, 300, 25);
+        detailPanel.add(lblDiaChi);
+
+        JLabel lblDetailMaHD = new JLabel("Mã hóa đơn:");
+        lblDetailMaHD.setBounds(20, 120, 100, 25);
+        txtDetailMaHD = new JTextField();
+        txtDetailMaHD.setBounds(130, 120, 200, 25);
+        txtDetailMaHD.setEditable(false);
+        detailPanel.add(lblDetailMaHD);
+        detailPanel.add(txtDetailMaHD);
+
+        JLabel lblNhanVien = new JLabel("Nhân viên:");
+        lblNhanVien.setBounds(20, 160, 100, 25);
+        txtNhanVien = new JTextField();
+        txtNhanVien.setBounds(130, 160, 200, 25);
+        txtNhanVien.setEditable(false);
+        detailPanel.add(lblNhanVien);
+        detailPanel.add(txtNhanVien);
+
+        JLabel lblPhongBan = new JLabel("Phòng/Bàn:");
+        lblPhongBan.setBounds(20, 200, 100, 25);
+        txtPhongBan = new JTextField();
+        txtPhongBan.setBounds(130, 200, 200, 25);
+        txtPhongBan.setEditable(false);
+        detailPanel.add(lblPhongBan);
+        detailPanel.add(txtPhongBan);
+
+        JLabel lblKhachHang = new JLabel("Khách hàng:");
+        lblKhachHang.setBounds(20, 240, 100, 25);
+        txtKhachHang = new JTextField();
+        txtKhachHang.setBounds(130, 240, 200, 25);
+        txtKhachHang.setEditable(false);
+        detailPanel.add(lblKhachHang);
+        detailPanel.add(txtKhachHang);
+
+        JLabel lblDetailSDT = new JLabel("SĐT:");
+        lblDetailSDT.setBounds(20, 280, 100, 25);
+        txtDetailSDT = new JTextField();
+        txtDetailSDT.setBounds(130, 280, 200, 25);
+        txtDetailSDT.setEditable(false);
+        detailPanel.add(lblDetailSDT);
+        detailPanel.add(txtDetailSDT);
+
+        JLabel lblThoiGian = new JLabel("Thời gian:");
+        lblThoiGian.setBounds(20, 320, 100, 25);
+        txtThoiGian = new JTextField();
+        txtThoiGian.setBounds(130, 320, 200, 25);
+        txtThoiGian.setEditable(false);
+        detailPanel.add(lblThoiGian);
+        detailPanel.add(txtThoiGian);
+
+        JLabel lblThue = new JLabel("Thuế (8%):");
+        lblThue.setBounds(20, 360, 100, 25);
+        txtThue = new JTextField();
+        txtThue.setBounds(130, 360, 200, 25);
+        txtThue.setEditable(false);
+        detailPanel.add(lblThue);
+        detailPanel.add(txtThue);
+
+        JLabel lblTongTien = new JLabel("Tổng tiền:");
+        lblTongTien.setBounds(20, 400, 100, 25);
+        txtTongTien = new JTextField();
+        txtTongTien.setBounds(130, 400, 200, 25);
+        txtTongTien.setEditable(false);
+        detailPanel.add(lblTongTien);
+        detailPanel.add(txtTongTien);
+
+        String[] detailColumnNames = {"Mã SP", "Tên SP", "Số lượng", "Giá bán", "Thành tiền"};
+        detailTableModel = new DefaultTableModel(detailColumnNames, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+        detailTable = new JTable(detailTableModel);
+        detailTable.getTableHeader().setReorderingAllowed(false);
+        JScrollPane detailScrollPane = new JScrollPane(detailTable);
+        detailScrollPane.setBounds(20, 440, 450, 150);
+        detailPanel.add(detailScrollPane);
+
+        JButton btnInHoaDon = new JButton("In Hóa Đơn");
+        btnInHoaDon.setBounds(180, 600, 150, 30);
+        btnInHoaDon.addActionListener(e -> showInvoice());
+        detailPanel.add(btnInHoaDon);
+
+        table.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                int row = table.getSelectedRow();
+                if (row >= 0) {
+                    String maHD = (String) tableModel.getValueAt(row, 0); // Lấy từ cột 0 (Mã hóa đơn)
+                    populateDetailPanel(maHD);
+                    if (!detailPanel.isVisible()) {
+                        toggleDetailPanel();
+                    }
+                }
+            }
+        });
+
+        loadTableData();
     }
+
+    private void loadTableData() {
+        tableModel.setRowCount(0);
+        List<HoaDon> hoaDons = null;
+        try {
+            hoaDons = daoHoaDon.getAllHoaDon();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Lỗi khi tải danh sách hóa đơn: " + e.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        if (hoaDons == null || hoaDons.isEmpty()) {
+            return;
+        }
+        for (HoaDon hd : hoaDons) {
+            List<CTHoaDon> ctList = null;
+            try {
+                ctList = daoCTHoaDon.getChiTietHoaDonByMaHDFromSP(hd.getMaHD());
+            } catch (SQLException e) {
+                e.printStackTrace();
+                JOptionPane.showMessageDialog(this, "Lỗi khi tải chi tiết hóa đơn: " + e.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+                continue;
+            }
+            if (ctList == null) {
+                ctList = new ArrayList<>();
+            }
+            double subTotal = ctList.stream().mapToDouble(CTHoaDon::getThanhTien).sum();
+            double tax = subTotal * TAX_RATE;
+            double total = subTotal + tax;
+            double daTra = hd.getTrangThai().equalsIgnoreCase("Đã thanh toán") ? total : 0;
+            double giamGia = hd.getTrangThai().equalsIgnoreCase("Đã thanh toán") && hd.getKhuyenMai() != null 
+                    ? hd.getKhuyenMai().getPhanTramGiamGia() 
+                    : 0;
+
+            Object[] row = {
+                hd.getMaHD(),
+                hd.getBan() != null ? hd.getBan().getMaBan() : "",
+                hd.getNgayLap() != null ? dtf.format(hd.getNgayLap()) : "",
+                hd.getKhachHang() != null ? hd.getKhachHang().getMaKH() : "Khách lẻ",
+                hd.getTrangThai(),
+                df.format(total),
+                df.format(giamGia),
+                df.format(daTra)
+            };
+            tableModel.addRow(row);
+        }
+    }
+
+    private void performSearch() {
+        String maHD = txtMaHD.getText().equals("Mã hóa đơn") ? "" : txtMaHD.getText();
+        String maKH = txtMaKH.getText().equals("Mã khách hàng") ? "" : txtMaKH.getText();
+        String maBan = txtMBan.getText().equals("Mã bàn") ? "" : txtMBan.getText();
+        String sdt = txtSDT.getText().equals("Số điện thoại") ? "" : txtSDT.getText();
+        String trangThai = (String) cbTrangThai.getSelectedItem();
+
+        LocalDateTime startDate = null;
+        LocalDateTime endDate = null;
+        if (dateStart.getDate() != null) {
+            startDate = dateStart.getDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
+        }
+        if (dateEnd.getDate() != null) {
+            endDate = dateEnd.getDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
+        }
+
+        List<HoaDon> hoaDons = null;
+        try {
+            hoaDons = daoHoaDon.searchHoaDon(maHD, maKH, maBan, sdt, trangThai, startDate, endDate, null);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Lỗi khi tìm kiếm hóa đơn: " + e.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        if (hoaDons == null) {
+            hoaDons = new ArrayList<>();
+        }
+        tableModel.setRowCount(0);
+        for (HoaDon hd : hoaDons) {
+            List<CTHoaDon> ctList = null;
+            try {
+                ctList = daoCTHoaDon.getChiTietHoaDonByMaHDFromSP(hd.getMaHD());
+            } catch (SQLException e) {
+                e.printStackTrace();
+                JOptionPane.showMessageDialog(this, "Lỗi khi tải chi tiết hóa đơn: " + e.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+                ctList = new ArrayList<>();
+            }
+            if (ctList == null) {
+                ctList = new ArrayList<>();
+            }
+            double subTotal = ctList.stream().mapToDouble(ct -> ct.getSoLuong() * ct.getDonGia()).sum();
+            double tax = subTotal * TAX_RATE;
+            double total = subTotal + tax;
+            double daTra = hd.getTrangThai().equalsIgnoreCase("Đã thanh toán") ? total : 0;
+            double giamGia = hd.getTrangThai().equalsIgnoreCase("Đã thanh toán") && hd.getKhuyenMai() != null 
+                    ? hd.getKhuyenMai().getPhanTramGiamGia() 
+                    : 0;
+
+            Object[] row = {
+                hd.getMaHD(),
+                hd.getBan() != null ? hd.getBan().getMaBan() : "",
+                hd.getNgayLap() != null ? dtf.format(hd.getNgayLap()) : "",
+                hd.getKhachHang() != null ? hd.getKhachHang().getMaKH() : "Khách lẻ",
+                hd.getTrangThai(),
+                df.format(total),
+                df.format(giamGia),
+                df.format(daTra)
+            };
+            tableModel.addRow(row);
+        }
+    }
+
+    private void populateDetailPanel(String maHD) {
+        HoaDon hd = null;
+        try {
+            hd = daoHoaDon.getAllHoaDon().stream()
+                    .filter(h -> h.getMaHD().equals(maHD))
+                    .findFirst()
+                    .orElse(null);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Lỗi khi tải hóa đơn: " + e.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        if (hd == null) {
+            JOptionPane.showMessageDialog(this, "Không tìm thấy hóa đơn có mã: " + maHD, "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        List<CTHoaDon> ctList = null;
+        try {
+            ctList = daoCTHoaDon.getChiTietHoaDonByMaHDFromSP(maHD);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Lỗi khi tải chi tiết hóa đơn: " + e.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+            ctList = new ArrayList<>();
+        }
+        if (ctList == null) {
+            ctList = new ArrayList<>();
+        }
+        double subTotal = ctList.stream().mapToDouble(CTHoaDon::getThanhTien).sum();
+        double tax = subTotal * TAX_RATE;
+        double total = subTotal + tax;
+
+        txtDetailMaHD.setText(hd.getMaHD() != null ? hd.getMaHD() : "");
+        txtNhanVien.setText(hd.getNhanVien() != null ? hd.getNhanVien().getMaNV() : "");
+        txtPhongBan.setText(hd.getBan() != null ? hd.getBan().getMaBan() : "");
+        txtKhachHang.setText(hd.getKhachHang() != null ? hd.getKhachHang().getMaKH() : "Khách lẻ");
+        txtDetailSDT.setText(hd.getKhachHang() != null ? hd.getKhachHang().getSdt() : "");
+        txtThoiGian.setText(hd.getNgayLap() != null ? dtf.format(hd.getNgayLap()) : "");
+        txtThue.setText(df.format(tax));
+        txtTongTien.setText(df.format(total));
+
+        detailTableModel.setRowCount(0);
+        for (CTHoaDon ct : ctList) {
+            Object[] row = {
+                ct.getMaMonAn(),
+                ct.getMaMonAn(), // Có thể thay bằng tên món nếu có DAO MonAn
+                ct.getSoLuong(),
+                df.format(ct.getDonGia()),
+                df.format(ct.getThanhTien())
+            };
+            detailTableModel.addRow(row);
+        }
+    }
+
+    private void toggleDetailPanel() {
+        if (detailPanel.isVisible()) {
+            detailPanel.setVisible(false);
+            setComponentZOrder(detailPanel, 0);
+            setComponentZOrder(btnNewButton, 0);
+            btnNewButton.setBounds(1492, 147, 30, 36);
+            scrollPane.setBounds(13, 122, 1480, 705);
+        } else {
+            setComponentZOrder(detailPanel, 0);
+            detailPanel.setVisible(true);
+            btnNewButton.setBounds(980, 147, 30, 36);
+            scrollPane.setBounds(13, 122, 965, 705);
+            detailPanel.setBounds(1010, 122, 500, 705);
+        }
+        repaint();
+        revalidate();
+    }
+
+    private void showInvoice() {
+        try {
+            String maHD = txtDetailMaHD.getText();
+            HoaDon hd = daoHoaDon.getAllHoaDon().stream()
+                    .filter(h -> h.getMaHD().equals(maHD))
+                    .findFirst()
+                    .orElse(null);
+            if (hd == null) {
+                JOptionPane.showMessageDialog(this, "Không tìm thấy hóa đơn!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            List<CTHoaDon> ctList = daoCTHoaDon.getChiTietHoaDonByMaHDFromSP(maHD);
+            if (ctList == null || ctList.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Không tìm thấy chi tiết hóa đơn!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            double subTotal = ctList.stream().mapToDouble(CTHoaDon::getThanhTien).sum();
+            double tax = subTotal * TAX_RATE;
+            double total = subTotal + tax;
+
+            // Tạo PrinterJob
+            PrinterJob printerJob = PrinterJob.getPrinterJob();
+            printerJob.setPrintable(new Printable() {
+                @Override
+                public int print(Graphics graphics, PageFormat pageFormat, int pageIndex) throws PrinterException {
+                    if (pageIndex > 0) {
+                        return NO_SUCH_PAGE;
+                    }
+
+                    Graphics2D g2d = (Graphics2D) graphics;
+                    g2d.translate(pageFormat.getImageableX(), pageFormat.getImageableY());
+
+                    // Thiết lập font và màu
+                    g2d.setFont(new Font("Arial", Font.BOLD, 14));
+                    g2d.setColor(Color.BLACK);
+
+                    // Vẽ tiêu đề
+                    g2d.drawString("Nhà hàng SERBUR", 100, 50);
+                    g2d.drawString("Địa chỉ: 4 Nguyễn Văn Bảo, P5, Gò Vấp", 100, 70);
+                    g2d.drawString("HÓA ĐƠN", 250, 100);
+
+                    // Vẽ thông tin hóa đơn
+                    g2d.setFont(new Font("Arial", Font.PLAIN, 12));
+                    int y = 130;
+                    g2d.drawString("Mã hóa đơn: " + txtDetailMaHD.getText(), 100, y); y += 20;
+                    g2d.drawString("Nhân viên: " + txtNhanVien.getText(), 100, y); y += 20;
+                    g2d.drawString("Phòng/Bàn: " + txtPhongBan.getText(), 100, y); y += 20;
+                    g2d.drawString("Khách hàng: " + txtKhachHang.getText(), 100, y); y += 20;
+                    g2d.drawString("SĐT: " + txtDetailSDT.getText(), 100, y); y += 40;
+
+                    // Vẽ tiêu đề bảng chi tiết
+                    y += 20;
+                    g2d.setFont(new Font("Arial", Font.BOLD, 12));
+                    int[] columnWidths = {80, 150, 80, 100, 100};
+                    int x = 100;
+                    g2d.drawString("Mã SP", x, y); x += columnWidths[0];
+                    g2d.drawString("Tên SP", x, y); x += columnWidths[1];
+                    g2d.drawString("Số lượng", x, y); x += columnWidths[2];
+                    g2d.drawString("Giá bán", x, y); x += columnWidths[3];
+                    g2d.drawString("Thành tiền", x, y);
+
+                    // Vẽ chi tiết hóa đơn
+                    y += 20;
+                    g2d.setFont(new Font("Arial", Font.PLAIN, 12));
+                    for (CTHoaDon ct : ctList) {
+                        x = 100;
+                        g2d.drawString(ct.getMaMonAn(), x, y); x += columnWidths[0];
+                        g2d.drawString(ct.getMaMonAn(), x, y); x += columnWidths[1]; // TODO: Thay bằng tên món ăn nếu có
+                        g2d.drawString(String.valueOf(ct.getSoLuong()), x, y); x += columnWidths[2];
+                        g2d.drawString(df.format(ct.getDonGia()), x, y); x += columnWidths[3];
+                        g2d.drawString(df.format(ct.getThanhTien()), x, y);
+                        y += 20;
+                    }
+
+                    // Vẽ tổng kết
+                    y += 20;
+                    g2d.drawString("Thời gian: " + txtThoiGian.getText(), 100, y); y += 20;
+                    g2d.drawString("Thuế (8%): " + txtThue.getText(), 100, y); y += 20;
+                    g2d.drawString("Tổng tiền: " + txtTongTien.getText(), 100, y);
+
+                    return PAGE_EXISTS;
+                }
+            });
+
+            // Hiển thị dialog chọn máy in
+            if (printerJob.printDialog()) {
+                printerJob.print();
+                JOptionPane.showMessageDialog(this, "In hóa đơn thành công!", "Thành công", JOptionPane.INFORMATION_MESSAGE);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Lỗi SQL: " + e.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+        } catch (PrinterException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Lỗi in: " + e.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+        } catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Lỗi không xác định: " + e.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
     private void setupPlaceholder(JTextField textField, String placeholder) {
         textField.setText(placeholder);
         textField.setForeground(Color.GRAY);
-
         textField.addFocusListener(new java.awt.event.FocusListener() {
             @Override
             public void focusGained(java.awt.event.FocusEvent e) {
@@ -208,44 +636,65 @@ public class panelTimKiemHD extends JPanel {
         });
     }
 
-class RoundedScrollPane extends JScrollPane {
-    private int cornerRadius;
+    class RoundedScrollPane extends JScrollPane {
+        private int cornerRadius;
 
-    public RoundedScrollPane(Component view, int radius) {
-        super(view);
-        this.cornerRadius = radius;
-        setOpaque(false);
-        setBorder(new EmptyBorder(5, 5, 5, 5)); // Thêm padding để không bị che mất góc
-        getViewport().setOpaque(false);
-        getViewport().setBackground(new Color(0, 0, 0, 0));
-        setBackground(Color.WHITE);
+        public RoundedScrollPane(Component view, int radius) {
+            super(view);
+            this.cornerRadius = radius;
+            setOpaque(false);
+            setBorder(new EmptyBorder(5, 5, 5, 5));
+            getViewport().setOpaque(false);
+            getViewport().setBackground(new Color(0, 0, 0, 0));
+            setBackground(Color.WHITE);
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.setColor(getBackground());
+            g2.fill(new RoundRectangle2D.Float(0, 0, getWidth(), getHeight(), cornerRadius, cornerRadius));
+            g2.dispose();
+        }
+
+        @Override
+        protected void paintBorder(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.setColor(Color.GRAY);
+            g2.draw(new RoundRectangle2D.Float(0, 0, getWidth() - 1, getHeight() - 1, cornerRadius, cornerRadius));
+            g2.dispose();
+        }
     }
 
-    @Override
-    protected void paintComponent(Graphics g) {
-        Graphics2D g2 = (Graphics2D) g.create();
-        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        
-        // Vẽ nền bo góc toàn bộ
-        g2.setColor(getBackground());
-        g2.fill(new RoundRectangle2D.Float(0, 0, getWidth(), getHeight(), cornerRadius, cornerRadius));
+    class RoundedPane extends JPanel {
+        private int cornerRadius;
 
-        g2.dispose();
+        public RoundedPane(int radius) {
+            this.cornerRadius = radius;
+            setOpaque(false);
+            setBorder(new EmptyBorder(5, 5, 5, 5));
+            setBackground(Color.WHITE);
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            super.paintComponent(g);
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.setColor(getBackground());
+            g2.fill(new RoundRectangle2D.Float(0, 0, getWidth(), getHeight(), cornerRadius, cornerRadius));
+            g2.dispose();
+        }
+
+        @Override
+        protected void paintBorder(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.setColor(Color.GRAY);
+            g2.draw(new RoundRectangle2D.Float(1, 1, getWidth() - 2, getHeight() - 2, cornerRadius, cornerRadius));
+            g2.dispose();
+        }
     }
-
-    @Override
-    protected void paintBorder(Graphics g) {
-        Graphics2D g2 = (Graphics2D) g.create();
-        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
-        // Vẽ viền bo tròn
-        g2.setColor(Color.GRAY); // Đổi màu viền nếu cần
-        g2.draw(new RoundRectangle2D.Float(0, 0, getWidth() - 1, getHeight() - 1, cornerRadius, cornerRadius));
-
-        g2.dispose();
-    }
-    
 }
-
-}
-

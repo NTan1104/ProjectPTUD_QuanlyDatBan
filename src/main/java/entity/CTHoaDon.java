@@ -1,28 +1,33 @@
 package entity;
 
 public class CTHoaDon {
-    private String maCTHD;
-    private HoaDon hoaDon;
-    private MonAn monAn;
+    private String maHoaDon;
+    private String maMonAn;
     private int soLuong;
     private double donGia;
-	public String getMaCTHD() {
-		return maCTHD;
+    private double thanhTien; // Thêm từ sp_GetChiTietHoaDonByMaHD
+
+    public CTHoaDon() {}
+
+    public CTHoaDon(String maHoaDon, String maMonAn, int soLuong, double donGia, double thanhTien) {
+        this.maHoaDon = maHoaDon;
+        this.maMonAn = maMonAn;
+        this.soLuong = soLuong;
+        this.donGia = donGia;
+        this.setThanhTien(thanhTien);
+    }
+
+	public String getMaHoaDon() {
+		return maHoaDon;
 	}
-	public void setMaCTHD(String maCTHD) {
-		this.maCTHD = maCTHD;
+	public void setMaHoaDon(String maHoaDon) {
+		this.maHoaDon = maHoaDon;
 	}
-	public HoaDon getHoaDon() {
-		return hoaDon;
+	public String getMaMonAn() {
+		return maMonAn;
 	}
-	public void setHoaDon(HoaDon hoaDon) {
-		this.hoaDon = hoaDon;
-	}
-	public MonAn getMonAn() {
-		return monAn;
-	}
-	public void setMonAn(MonAn monAn) {
-		this.monAn = monAn;
+	public void setMaMonAn(String maMonAn) {
+		this.maMonAn = maMonAn;
 	}
 	public int getSoLuong() {
 		return soLuong;
@@ -35,6 +40,14 @@ public class CTHoaDon {
 	}
 	public void setDonGia(double donGia) {
 		this.donGia = donGia;
+	}
+
+	public double getThanhTien() {
+		return thanhTien;
+	}
+
+	public void setThanhTien(double thanhTien) {
+		this.thanhTien = thanhTien;
 	}
     
 }

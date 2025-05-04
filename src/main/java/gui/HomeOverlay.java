@@ -18,7 +18,7 @@ public class HomeOverlay extends JWindow {
     private static final long serialVersionUID = 1L;
     private PanelOverlay overlay;
     private List<ModelLocation> locations;
-    private Main mainFrame; // Tham chiếu đến Main
+    private Main mainFrame;
 
     public HomeOverlay(Main mainFrame, List<ModelLocation> locations) { // Nhận Main từ Home
         super(mainFrame);

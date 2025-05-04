@@ -3,7 +3,6 @@ package gui.panelForm;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
-import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -12,17 +11,30 @@ import java.awt.RenderingHints;
 import java.awt.SystemColor;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.geom.RoundRectangle2D;
+import java.awt.print.PageFormat;
+import java.awt.print.Printable;
+import java.awt.print.PrinterException;
+import java.awt.print.PrinterJob;
+import java.sql.SQLException;
+import java.text.DecimalFormat;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -33,6 +45,11 @@ import com.formdev.flatlaf.FlatIntelliJLaf;
 import com.formdev.flatlaf.FlatLaf;
 import com.formdev.flatlaf.fonts.roboto.FlatRobotoFont;
 
+import dao.DAO_CTHoaDon;
+import dao.DAO_HoaDon;
+import entity.CTHoaDon;
+import entity.HoaDon;
+
 public class PanelQLyHD extends JPanel {
     private static final long serialVersionUID = 1L;
     private JTable table;
@@ -40,36 +57,39 @@ public class PanelQLyHD extends JPanel {
     private JPanel detailPanel;
     private JButton btnNewButton;
     private RoundedScrollPane scrollPane;
+    private DAO_HoaDon daoHoaDon;
+    private DAO_CTHoaDon daoCTHoaDon;
+    private JTextField txtMaHD, txtNhanVien, txtPhongBan, txtKhachHang, txtSDT, txtThoiGian, txtThue, txtTongTien;
+    private JTable detailTable;
+    private DefaultTableModel detailTableModel;
+    private final double TAX_RATE = 0.08;
+    private final DecimalFormat df = new DecimalFormat("#,###");
+    private final DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+
     public PanelQLyHD() {
         setBackground(SystemColor.controlHighlight);
         setLayout(null);
         setSize(1535, 850);
-        
-        // Cài đặt font FlatLaf
+
+        daoHoaDon = new DAO_HoaDon();
+        daoCTHoaDon = new DAO_CTHoaDon();
+
         FlatRobotoFont.install();
         FlatLaf.registerCustomDefaultsSource("themes");
         FlatIntelliJLaf.setup();
         UIManager.put("defaultFont", new Font(FlatRobotoFont.FAMILY, Font.PLAIN, 13));
 
-        // Tiêu đề
-        JLabel lblTitle = new JLabel("QUẢN LÝ HÓA ĐƠN");
-        lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 20));
-        lblTitle.setHorizontalAlignment(SwingConstants.CENTER);
-        lblTitle.setBounds(0, 10, 1535, 27);
-        add(lblTitle);
-
-        String[] columnNames = { "Mã hóa đơn", "Bàn", "Thời gian", "Khách hàng", "Trạng thái", "Tổng tiền", "Giá giảm", "Đã trả",};
-        
-        DefaultTableModel tableModel = new DefaultTableModel(columnNames, 0) {
+        String[] columnNames = {"Mã hóa đơn", "Bàn", "Thời gian", "Khách hàng", "Trạng thái", "Tổng tiền", "Giá giảm", "Đã trả"};
+        tableModel = new DefaultTableModel(columnNames, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
-                return false; // Không cho chỉnh sửa bất kỳ ô nào
+                return false;
             }
         };
         table = new JTable(tableModel);
         JTableHeader header = table.getTableHeader();
         header.setFont(header.getFont().deriveFont(Font.BOLD));
-        int[] columnWidths = { 100,25, 140, 120, 115, 100, 80, 100}; 
+        int[] columnWidths = {100, 25, 140, 120, 115, 100, 80, 100};
         for (int i = 0; i < columnWidths.length; i++) {
             table.getColumnModel().getColumn(i).setPreferredWidth(columnWidths[i]);
         }
@@ -90,133 +110,120 @@ public class PanelQLyHD extends JPanel {
             table.getColumnModel().getColumn(i).setCellRenderer(rightRenderer);
         }
 
-        Object[][] data = {
-                { "HD001","B1", "29/3/2025", "Khách lẻ", "Đã thanh toán", 5600000, 550000, 4500000},
-                { "HD002","B2", "29/3/2025", "Giang", "Chưa thanh toán", 400000, 50000, 0}
-            };
-
-            for (Object[] row : data) {
-                tableModel.addRow(row);
-            }
-
-
         scrollPane = new RoundedScrollPane(table, 30);
-        scrollPane.setBounds(13, 70, 1480, 750);
+        scrollPane.setBounds(13, 15, 1480, 795);
         scrollPane.setBackground(Color.WHITE);
         add(scrollPane);
-        
-     // Tải ảnh gốc
-        ImageIcon originalIcon = new ImageIcon(PanelQLyHD.class.getResource("/img/icons8-view-details-50.png"));
 
-        // Chỉnh kích thước icon về 40x40
+        ImageIcon originalIcon = new ImageIcon(getClass().getResource("/img/icons8-view-details-50.png"));
         Image scaledImage = originalIcon.getImage().getScaledInstance(36, 36, Image.SCALE_SMOOTH);
         ImageIcon resizedIcon = new ImageIcon(scaledImage);
-
-        // Tạo JButton với icon mới
-        btnNewButton = new JButton(""); // Gán giá trị cho biến instance thay vì tạo biến cục bộ mới
+        btnNewButton = new JButton("");
         btnNewButton.setIcon(resizedIcon);
-        btnNewButton.setBounds(1492, 95, 30, 36);
+        btnNewButton.setBounds(1492, 40, 30, 36);
         add(btnNewButton);
 
-        // Tạo JPanel chi tiết (ẩn ban đầu)
-        detailPanel = new JPanel();
+        detailPanel = new RoundedPane(30);
         detailPanel.setLayout(null);
-        detailPanel.setBounds(993, 70, 500, 750);
+        detailPanel.setBounds(993, 15, 500, 750);
         detailPanel.setBackground(Color.WHITE);
         detailPanel.setVisible(false);
 
-        // Tiêu đề hóa đơn
         JLabel lblTitle_1 = new JLabel("THÔNG TIN HÓA ĐƠN", SwingConstants.CENTER);
         lblTitle_1.setFont(new Font("Arial", Font.BOLD, 18));
         lblTitle_1.setBounds(100, 10, 300, 30);
         detailPanel.add(lblTitle_1);
 
-        // Tên nhà hàng (cố định)
         JLabel lblNhaHang = new JLabel("Nhà hàng: SERBUR");
         lblNhaHang.setBounds(20, 50, 200, 25);
         detailPanel.add(lblNhaHang);
 
-        // Địa chỉ (cố định)
         JLabel lblDiaChi = new JLabel("Địa chỉ: 4 Nguyễn Văn Bảo, P5, Gò Vấp");
         lblDiaChi.setBounds(20, 80, 300, 25);
         detailPanel.add(lblDiaChi);
 
-        // Label và TextField cho thông tin hóa đơn
         JLabel lblMaHD = new JLabel("Mã hóa đơn:");
         lblMaHD.setBounds(20, 120, 100, 25);
-        JTextField txtMaHD = new JTextField();
+        txtMaHD = new JTextField();
         txtMaHD.setBounds(130, 120, 200, 25);
         txtMaHD.setEditable(false);
+        detailPanel.add(lblMaHD);
+        detailPanel.add(txtMaHD);
 
         JLabel lblNhanVien = new JLabel("Nhân viên:");
         lblNhanVien.setBounds(20, 160, 100, 25);
-        JTextField txtNhanVien = new JTextField();
+        txtNhanVien = new JTextField();
         txtNhanVien.setBounds(130, 160, 200, 25);
         txtNhanVien.setEditable(false);
+        detailPanel.add(lblNhanVien);
+        detailPanel.add(txtNhanVien);
 
         JLabel lblPhongBan = new JLabel("Phòng/Bàn:");
         lblPhongBan.setBounds(20, 200, 100, 25);
-        JTextField txtPhongBan = new JTextField();
+        txtPhongBan = new JTextField();
         txtPhongBan.setBounds(130, 200, 200, 25);
         txtPhongBan.setEditable(false);
+        detailPanel.add(lblPhongBan);
+        detailPanel.add(txtPhongBan);
 
         JLabel lblKhachHang = new JLabel("Khách hàng:");
         lblKhachHang.setBounds(20, 240, 100, 25);
-        JTextField txtKhachHang = new JTextField();
+        txtKhachHang = new JTextField();
         txtKhachHang.setBounds(130, 240, 200, 25);
         txtKhachHang.setEditable(false);
+        detailPanel.add(lblKhachHang);
+        detailPanel.add(txtKhachHang);
 
-        // Số điện thoại khách hàng
         JLabel lblSDT = new JLabel("SĐT:");
         lblSDT.setBounds(20, 280, 100, 25);
-        JTextField txtSDT = new JTextField();
+        txtSDT = new JTextField();
         txtSDT.setBounds(130, 280, 200, 25);
         txtSDT.setEditable(false);
+        detailPanel.add(lblSDT);
+        detailPanel.add(txtSDT);
 
         JLabel lblThoiGian = new JLabel("Thời gian:");
         lblThoiGian.setBounds(20, 320, 100, 25);
-        JTextField txtThoiGian = new JTextField();
+        txtThoiGian = new JTextField();
         txtThoiGian.setBounds(130, 320, 200, 25);
         txtThoiGian.setEditable(false);
+        detailPanel.add(lblThoiGian);
+        detailPanel.add(txtThoiGian);
 
-        // Thuế 8% (đặt dưới thời gian)
         JLabel lblThue = new JLabel("Thuế (8%):");
         lblThue.setBounds(20, 360, 100, 25);
-        JTextField txtThue = new JTextField();
+        txtThue = new JTextField();
         txtThue.setBounds(130, 360, 200, 25);
         txtThue.setEditable(false);
+        detailPanel.add(lblThue);
+        detailPanel.add(txtThue);
 
-        // Tổng tiền (trước bảng món ăn)
         JLabel lblTongTien = new JLabel("Tổng tiền:");
         lblTongTien.setBounds(20, 400, 100, 25);
-        JTextField txtTongTien = new JTextField();
+        txtTongTien = new JTextField();
         txtTongTien.setBounds(130, 400, 200, 25);
         txtTongTien.setEditable(false);
+        detailPanel.add(lblTongTien);
+        detailPanel.add(txtTongTien);
 
-        // Bảng hiển thị danh sách món ăn
-        String[] columnNames_1 = { "Mã SP", "Tên SP", "Số lượng", "Giá bán", "Thành tiền" };
-        tableModel = new DefaultTableModel(columnNames_1, 0) {
-            /**
-			 * 
-			 */
-			private static final long serialVersionUID = 1L;
-
-			@Override
+        String[] detailColumnNames = {"Mã SP", "Tên SP", "Số lượng", "Giá bán", "Thành tiền"};
+        detailTableModel = new DefaultTableModel(detailColumnNames, 0) {
+            @Override
             public boolean isCellEditable(int row, int column) {
-                return false; // Không cho chỉnh sửa bất kỳ ô nào
+                return false;
             }
         };
-        table = new JTable(tableModel);
-        table.getTableHeader().setReorderingAllowed(false); // Ngăn kéo thả cột
-        JScrollPane scrollPane = new JScrollPane(table);
-        scrollPane.setBounds(20, 440, 450, 260);
+        detailTable = new JTable(detailTableModel);
+        detailTable.getTableHeader().setReorderingAllowed(false);
+        JScrollPane detailScrollPane = new JScrollPane(detailTable);
+        detailScrollPane.setBounds(20, 440, 450, 260);
+        detailPanel.add(detailScrollPane);
 
-     // Nút In Hóa Đơn
         JButton btnInHoaDon = new JButton("In Hóa Đơn");
         btnInHoaDon.setBounds(180, 710, 150, 30);
+        btnInHoaDon.addActionListener(e -> showInvoice());
         detailPanel.add(btnInHoaDon);
 
-        
         detailPanel.add(lblMaHD);
         detailPanel.add(txtMaHD);
         detailPanel.add(lblNhanVien);
@@ -233,80 +240,299 @@ public class PanelQLyHD extends JPanel {
         detailPanel.add(txtThue);
         detailPanel.add(lblTongTien);
         detailPanel.add(txtTongTien);
-        detailPanel.add(scrollPane);
 
         add(detailPanel);
 
-        // Thêm sự kiện click cho nút
-        btnNewButton.addActionListener(new ActionListener() {
+        btnNewButton.addActionListener(e -> toggleDetailPanel());
+
+        table.addMouseListener(new MouseAdapter() {
             @Override
-            public void actionPerformed(ActionEvent e) {
-                toggleDetailPanel();
+            public void mouseClicked(MouseEvent e) {
+                int row = table.getSelectedRow();
+                if (row >= 0) {
+                    String maHD = (String) tableModel.getValueAt(row, 0);
+                    populateDetailPanel(maHD);
+                    if (!detailPanel.isVisible()) {
+                        toggleDetailPanel();
+                    }
+                }
             }
         });
+
+        loadTableData();
     }
 
-    // Phương thức ẩn/hiện panel chi tiết
+    private void loadTableData() {
+        tableModel.setRowCount(0);
+        List<HoaDon> hoaDons = null;
+        try {
+            hoaDons = daoHoaDon.getAllHoaDon();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Lỗi khi tải danh sách hóa đơn: " + e.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        if (hoaDons == null || hoaDons.isEmpty()) {
+            return;
+        }
+        for (HoaDon hd : hoaDons) {
+            List<CTHoaDon> ctList = null;
+            try {
+                ctList = daoCTHoaDon.getChiTietHoaDonByMaHDFromSP(hd.getMaHD());
+            } catch (SQLException e) {
+                e.printStackTrace();
+                JOptionPane.showMessageDialog(this, "Lỗi khi tải chi tiết hóa đơn: " + e.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+                continue;
+            }
+            if (ctList == null) {
+                ctList = new ArrayList<>();
+            }
+            double subTotal = ctList.stream().mapToDouble(CTHoaDon::getThanhTien).sum();
+            double tax = subTotal * TAX_RATE;
+            double total = subTotal + tax;
+            double daTra = hd.getTrangThai().equalsIgnoreCase("Đã thanh toán") ? total : 0;
+            double giamGia = hd.getTrangThai().equalsIgnoreCase("Đã thanh toán") && hd.getKhuyenMai() != null 
+                    ? hd.getKhuyenMai().getPhanTramGiamGia() 
+                    : 0;
+
+            Object[] row = {
+                hd.getMaHD(),
+                hd.getBan() != null ? hd.getBan().getMaBan() : "",
+                hd.getNgayLap() != null ? dtf.format(hd.getNgayLap()) : "",
+                hd.getKhachHang() != null ? hd.getKhachHang().getMaKH() : "Khách lẻ",
+                hd.getTrangThai(),
+                df.format(total),
+                df.format(giamGia),
+                df.format(daTra)
+            };
+            tableModel.addRow(row);
+        }
+    }
+
+    private void populateDetailPanel(String maHD) {
+        HoaDon hd = null;
+        try {
+            hd = daoHoaDon.getAllHoaDon().stream()
+                    .filter(h -> h.getMaHD().equals(maHD))
+                    .findFirst()
+                    .orElse(null);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        if (hd == null) return;
+
+        List<CTHoaDon> ctList = null;
+        try {
+            ctList = daoCTHoaDon.getChiTietHoaDonByMaHDFromSP(maHD);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        double subTotal = ctList.stream().mapToDouble(CTHoaDon::getThanhTien).sum();
+        double tax = subTotal * TAX_RATE;
+        double total = subTotal + tax;
+
+        txtMaHD.setText(hd.getMaHD() != null ? hd.getMaHD() : "");
+        txtNhanVien.setText(hd.getNhanVien() != null ? hd.getNhanVien().getMaNV() : "");
+        txtPhongBan.setText(hd.getBan() != null ? hd.getBan().getMaBan() : "");
+        txtKhachHang.setText(hd.getKhachHang() != null ? hd.getKhachHang().getMaKH() : "Khách lẻ");
+        txtSDT.setText(hd.getKhachHang() != null ? hd.getKhachHang().getSdt() : "");
+        txtThoiGian.setText(hd.getNgayLap() != null ? dtf.format(hd.getNgayLap()) : "");
+        txtThue.setText(df.format(tax));
+        txtTongTien.setText(df.format(total));
+
+        detailTableModel.setRowCount(0);
+        for (CTHoaDon ct : ctList) {
+            Object[] row = {
+                ct.getMaMonAn(),
+                ct.getMaMonAn(),
+                ct.getSoLuong(),
+                df.format(ct.getDonGia()),
+                df.format(ct.getThanhTien())
+            };
+            detailTableModel.addRow(row);
+        }
+    }
+
+    private void showInvoice() {
+        try {
+            String maHD = txtMaHD.getText();
+            HoaDon hd = daoHoaDon.getAllHoaDon().stream()
+                    .filter(h -> h.getMaHD().equals(maHD))
+                    .findFirst()
+                    .orElse(null);
+            if (hd == null) {
+                JOptionPane.showMessageDialog(this, "Không tìm thấy hóa đơn!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            List<CTHoaDon> ctList = daoCTHoaDon.getChiTietHoaDonByMaHDFromSP(maHD);
+            if (ctList == null || ctList.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Không tìm thấy chi tiết hóa đơn!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            double subTotal = ctList.stream().mapToDouble(CTHoaDon::getThanhTien).sum();
+            double tax = subTotal * TAX_RATE;
+            double total = subTotal + tax;
+
+            // Tạo PrinterJob
+            PrinterJob printerJob = PrinterJob.getPrinterJob();
+            printerJob.setPrintable(new Printable() {
+                @Override
+                public int print(Graphics graphics, PageFormat pageFormat, int pageIndex) throws PrinterException {
+                    if (pageIndex > 0) {
+                        return NO_SUCH_PAGE;
+                    }
+
+                    Graphics2D g2d = (Graphics2D) graphics;
+                    g2d.translate(pageFormat.getImageableX(), pageFormat.getImageableY());
+
+                    // Thiết lập font và màu
+                    g2d.setFont(new Font("Arial", Font.BOLD, 14));
+                    g2d.setColor(Color.BLACK);
+
+                    // Vẽ tiêu đề
+                    g2d.drawString("Nhà hàng SERBUR", 100, 50);
+                    g2d.drawString("Địa chỉ: 4 Nguyễn Văn Bảo, P5, Gò Vấp", 100, 70);
+                    g2d.drawString("HÓA ĐƠN", 250, 100);
+
+                    // Vẽ thông tin hóa đơn
+                    g2d.setFont(new Font("Arial", Font.PLAIN, 12));
+                    int y = 130;
+                    g2d.drawString("Mã hóa đơn: " + txtMaHD.getText(), 100, y); y += 20;
+                    g2d.drawString("Nhân viên: " + txtNhanVien.getText(), 100, y); y += 20;
+                    g2d.drawString("Phòng/Bàn: " + txtPhongBan.getText(), 100, y); y += 20;
+                    g2d.drawString("Khách hàng: " + txtKhachHang.getText(), 100, y); y += 20;
+                    g2d.drawString("SĐT: " + txtSDT.getText(), 100, y); y += 40;
+
+                    // Vẽ tiêu đề bảng chi tiết
+                    y += 20;
+                    g2d.setFont(new Font("Arial", Font.BOLD, 12));
+                    int[] columnWidths = {80, 150, 80, 100, 100};
+                    int x = 100;
+                    g2d.drawString("Mã SP", x, y); x += columnWidths[0];
+                    g2d.drawString("Tên SP", x, y); x += columnWidths[1];
+                    g2d.drawString("Số lượng", x, y); x += columnWidths[2];
+                    g2d.drawString("Giá bán", x, y); x += columnWidths[3];
+                    g2d.drawString("Thành tiền", x, y);
+
+                    // Vẽ chi tiết hóa đơn
+                    y += 20;
+                    g2d.setFont(new Font("Arial", Font.PLAIN, 12));
+                    for (CTHoaDon ct : ctList) {
+                        x = 100;
+                        g2d.drawString(ct.getMaMonAn(), x, y); x += columnWidths[0];
+                        g2d.drawString(ct.getMaMonAn(), x, y); x += columnWidths[1]; // TODO: Thay bằng tên món ăn nếu có
+                        g2d.drawString(String.valueOf(ct.getSoLuong()), x, y); x += columnWidths[2];
+                        g2d.drawString(df.format(ct.getDonGia()), x, y); x += columnWidths[3];
+                        g2d.drawString(df.format(ct.getThanhTien()), x, y);
+                        y += 20;
+                    }
+
+                    // Vẽ tổng kết
+                    y += 20;
+                    g2d.drawString("Thời gian: " + txtThoiGian.getText(), 100, y); y += 20;
+                    g2d.drawString("Thuế (8%): " + txtThue.getText(), 100, y); y += 20;
+                    g2d.drawString("Tổng tiền: " + txtTongTien.getText(), 100, y);
+
+                    return PAGE_EXISTS;
+                }
+            });
+
+            // Hiển thị dialog chọn máy in
+            if (printerJob.printDialog()) {
+                printerJob.print();
+                JOptionPane.showMessageDialog(this, "In hóa đơn thành công!", "Thành công", JOptionPane.INFORMATION_MESSAGE);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Lỗi SQL: " + e.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+        } catch (PrinterException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Lỗi in: " + e.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+        } catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Lỗi không xác định: " + e.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
     private void toggleDetailPanel() {
         if (detailPanel.isVisible()) {
             detailPanel.setVisible(false);
-            setComponentZOrder(detailPanel, 0); // Đảm bảo panel xuống dưới khi ẩn
+            setComponentZOrder(detailPanel, 0);
             setComponentZOrder(btnNewButton, 0);
-            btnNewButton.setBounds(1492, 95, 30, 36);
-            scrollPane.setBounds(13, 70, 1480, 750);
-            // Đưa nút về vị trí ban đầu
+            btnNewButton.setBounds(1492, 40, 30, 36);
+            scrollPane.setBounds(13, 15, 1480, 795);
         } else {
-            setComponentZOrder(detailPanel, 0); // Đưa panel lên trên khi hiển thị
+            setComponentZOrder(detailPanel, 0);
             detailPanel.setVisible(true);
-            btnNewButton.setBounds(963, 95, 30, 36);
-            scrollPane.setBounds(13, 70, 950, 750);
-            detailPanel.setBounds(995, 70, 500, 750);
+            btnNewButton.setBounds(963, 40, 30, 36);
+            scrollPane.setBounds(13, 15, 950, 795);
+            detailPanel.setBounds(995, 15, 500, 795);
         }
-        
         repaint();
         revalidate();
     }
 
+    class RoundedScrollPane extends JScrollPane {
+        private int cornerRadius;
 
-        
-    
+        public RoundedScrollPane(Component view, int radius) {
+            super(view);
+            this.cornerRadius = radius;
+            setOpaque(false);
+            setBorder(new EmptyBorder(5, 5, 5, 5));
+            getViewport().setOpaque(false);
+            getViewport().setBackground(new Color(0, 0, 0, 0));
+            setBackground(Color.WHITE);
+        }
 
-class RoundedScrollPane extends JScrollPane {
-    private int cornerRadius;
+        @Override
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.setColor(getBackground());
+            g2.fill(new RoundRectangle2D.Float(0, 0, getWidth(), getHeight(), cornerRadius, cornerRadius));
+            g2.dispose();
+        }
 
-    public RoundedScrollPane(Component view, int radius) {
-        super(view);
-        this.cornerRadius = radius;
-        setOpaque(false);
-        setBorder(new EmptyBorder(5, 5, 5, 5)); // Thêm padding để không bị che mất góc
-        getViewport().setOpaque(false);
-        getViewport().setBackground(new Color(0, 0, 0, 0));
-        setBackground(Color.WHITE);
+        @Override
+        protected void paintBorder(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.setColor(Color.GRAY);
+            g2.draw(new RoundRectangle2D.Float(0, 0, getWidth() - 1, getHeight() - 1, cornerRadius, cornerRadius));
+            g2.dispose();
+        }
     }
 
-    @Override
-    protected void paintComponent(Graphics g) {
-        Graphics2D g2 = (Graphics2D) g.create();
-        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        
-        // Vẽ nền bo góc toàn bộ
-        g2.setColor(getBackground());
-        g2.fill(new RoundRectangle2D.Float(0, 0, getWidth(), getHeight(), cornerRadius, cornerRadius));
+    class RoundedPane extends JPanel {
+        private int cornerRadius;
 
-        g2.dispose();
+        public RoundedPane(int radius) {
+            this.cornerRadius = radius;
+            setOpaque(false);
+            setBorder(new EmptyBorder(5, 5, 5, 5));
+            setBackground(Color.WHITE);
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            super.paintComponent(g);
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.setColor(getBackground());
+            g2.fill(new RoundRectangle2D.Float(0, 0, getWidth(), getHeight(), cornerRadius, cornerRadius));
+            g2.dispose();
+        }
+
+        @Override
+        protected void paintBorder(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.setColor(Color.GRAY);
+            g2.draw(new RoundRectangle2D.Float(1, 1, getWidth() - 2, getHeight() - 2, cornerRadius, cornerRadius));
+            g2.dispose();
+        }
     }
-
-    @Override
-    protected void paintBorder(Graphics g) {
-        Graphics2D g2 = (Graphics2D) g.create();
-        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
-        // Vẽ viền bo tròn
-        g2.setColor(Color.GRAY); // Đổi màu viền nếu cần
-        g2.draw(new RoundRectangle2D.Float(0, 0, getWidth() - 1, getHeight() - 1, cornerRadius, cornerRadius));
-
-        g2.dispose();
-    }
-}
-
 }

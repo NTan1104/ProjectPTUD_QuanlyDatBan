@@ -6,9 +6,19 @@ import java.time.LocalDateTime;
 public class KhuyenMai {
     private String maKM;
     private String dieuKien;
-    private LocalDateTime hanSuDung;
+    private LocalDateTime ngayKetThuc;
     private LocalDateTime ngayBatDau;
     private double phanTramGiamGia;
+    public KhuyenMai() {
+    	
+    }
+    public KhuyenMai(String maKH, String dieuKien, LocalDateTime ngayKetThuc, LocalDateTime ngayBatDau, double phanTramGiamGia) {
+    	this.maKM = maKH;
+    	this.dieuKien = dieuKien;
+    	this.ngayKetThuc = ngayKetThuc;
+    	this.ngayBatDau = ngayBatDau;
+    	this.phanTramGiamGia = phanTramGiamGia;
+    }
 	public String getMaKM() {
 		return maKM;
 	}
@@ -21,11 +31,11 @@ public class KhuyenMai {
 	public void setDieuKien(String dieuKien) {
 		this.dieuKien = dieuKien;
 	}
-	public LocalDateTime getHanSuDung() {
-		return hanSuDung;
+	public LocalDateTime getngayKetThuc() {
+		return ngayKetThuc;
 	}
-	public void setHanSuDung(LocalDateTime hanSuDung) {
-		this.hanSuDung = hanSuDung;
+	public void setngayKetThuc(LocalDateTime ngayKetThuc) {
+		this.ngayKetThuc = ngayKetThuc;
 	}
 	public LocalDateTime getNgayBatDau() {
 		return ngayBatDau;

@@ -1,11 +1,13 @@
 package gui.drawer;
 
+
+import java.text.SimpleDateFormat;	
+import java.util.Date;
+import javax.swing.JOptionPane;
 import gui.Main;
-import gui.homeNV;
+import gui.homeAll;
 import gui.panelForm.panelDatBan;
 import gui.panelForm.panelTrangChu;
-import gui.panelForm.PanelQLyHD;
-import gui.panelForm.panelTimKiemHD;
 import raven.drawer.component.SimpleDrawerBuilder;
 import raven.drawer.component.footer.SimpleFooterData;
 import raven.drawer.component.header.SimpleHeaderData;
@@ -17,96 +19,93 @@ import raven.swing.AvatarIcon;
 
 public class DrawerNV extends SimpleDrawerBuilder {
 
-	private homeNV trangChinh;
+	private homeAll trangChinh;
 	private Main trangDangNhap;
-	public DrawerNV(homeNV trangChinh, Main trangDangNhap) {
+	public DrawerNV(homeAll trangChinh, Main trangDangNhap, String maNV) {
 		this.trangChinh = trangChinh;
 		this.trangDangNhap = trangDangNhap;
+		this.getSimpleHeaderData().setTitle("NTan");
 	}
-
-	@Override
-	public SimpleFooterData getSimpleFooterData() {
-		return new SimpleFooterData().setTitle("Chào mừng");
+	public String getName() {
+		return trangChinh.getNamebyID();
 	}
-
+	public void showWelcomeMessage(String name) {
+		JOptionPane.showMessageDialog(trangChinh, "Chào mừng " + name, "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+	}
 	@Override
 	public SimpleHeaderData getSimpleHeaderData() {
-		String hoTen = "Nguyễn Tân";
-		String chucVu = "Nhân viên lễ tân";
-		return new SimpleHeaderData().setIcon(new AvatarIcon(getClass().getResource("avatar.jpg"), 120, 120, 1200))
-				.setTitle(hoTen).setDescription(chucVu);
+	    String chucVu = "Nhân viên lễ tân";
+	    return new SimpleHeaderData()
+	        .setIcon(new AvatarIcon(getClass().getResource("/img/staffIcon.png"), 120, 120, 1500))
+	        .setTitle("Nhà hàng Cerbus BBQ")
+	        .setDescription(chucVu);
+	}
+	@Override
+	public SimpleFooterData getSimpleFooterData() {
+		Date currentTime = new Date();
+		SimpleDateFormat formatter = new SimpleDateFormat("EEEE, dd/MM/yyyy" + " HH:mm         ");
+		String formattedTime = formatter.format(currentTime);
+		formattedTime = formattedTime.replace("Monday", "Thứ Hai").replace("Tuesday", "Thứ Ba")
+				.replace("Wednesday", "Thứ Tư").replace("Thursday", "Thứ Năm").replace("Friday", "Thứ Sáu")
+				.replace("Saturday", "Thứ Bảy").replace("Sunday", "Chủ Nhật");
+		return new SimpleFooterData().setTitle(formattedTime);
 	}
 
 	@Override
 	public SimpleMenuOption getSimpleMenuOption() {
-		String[][] menus = { 
-		        { "~TRANG CHỦ~" },
-		        { "Trang chủ" },
-		        { "~BÀN~" },
-		        { "Bàn", "Đặt bàn", "Quản lý bàn" },
-		        { "~KHÁCH HÀNG~" },
-		        { "Khách hàng", "Quản lý khách hàng", "Tìm kiếm khách hàng" },
-		        { "~HÓA ĐƠN~" },
-		        { "Hóa đơn", "Quản lý hóa đơn", "Tìm kiếm hóa đơn" },
-		        { "~CÔNG CỤ~" },
-		        { "Công cụ", "Trợ giúp", "Cài đặt" },
-		        { "~TÀI KHOẢN~" },
-		        { "Tài khoản", "Thay đổi mật khẩu", "Đăng xuất", "Thoát" }
-
-		};
-		String[] icons = { "home-svgrepo-com.svg", "table-svgrepo-com (1).svg", "customers-svgrepo-com.svg",
-				"bill-invoice-ui-svgrepo-com.svg", "tool-01-svgrepo-com.svg", "account-svgrepo-com.svg" };
+		String[][] menus = { { "~TRANG CHỦ~" }, { "Trang chủ" }, { "~BÀN~" }, { "Bàn", "Đặt bàn", "Quản lý bàn" },
+				{ "~KHÁCH HÀNG~" }, { "Khách hàng", "Quản lý khách hàng", "Tìm kiếm khách hàng" }, { "~HÓA ĐƠN~" },
+				{ "Hóa đơn", "Quản lý hóa đơn", "Tìm kiếm hóa đơn" }, { "~CÔNG CỤ~" },
+				{ "Công cụ", "Trợ giúp", "Cài đặt" }, { "~TÀI KHOẢN~" },
+				{ "Tài khoản", "Thông tin cá nhân", "Đăng xuất", "Thoát" } };
+		String[] icons = { "home-svgrepo-com.svg", "table-dinner-svgrepo-com.svg", "users-svgrepo-com.svg",
+				"bill-svgrepo-com.svg", "tools-svgrepo-com.svg", "account-svgrepo-com.svg" };
 
 		return new SimpleMenuOption().setMenus(menus).setIcons(icons).setBaseIconPath("img").setIconScale(0.03f)
 				.addMenuEvent(new MenuEvent() {
 					@Override
 					public void selected(MenuAction action, int index, int subIndex) {
 						System.out.println("Menu selected: " + index + " " + subIndex);
-						// Trang chủ index=0	
+						// Trang chủ
 						if (index == 0 && subIndex == 0) {
-							
 							panelTrangChu home = new panelTrangChu();
 							trangChinh.setPanelBody(home);
 							home.playVideo("video/2424767-uhd_3840_2160_24fps.mp4");
 						}
-						// Bàn idex=1
+						// Bàn
 						if (index == 1) {
-							if(subIndex==1) {
+							if (subIndex == 1) {
 								panelDatBan DatBan = new panelDatBan();
 								trangChinh.setPanelBody(DatBan);
-								DatBan.playVideo("video/tableFloor.mp4");
-							}
-							else if(subIndex==2) {
-								
-							}
-						}
-						// Khách hàng index=2
-						if(index==2) {
-							
-						}
-						// Hóa đơn index=3
-						if( index==3) {
-							if(subIndex==1) {
-								trangChinh.setPanelBody(new PanelQLyHD());
-							}
-							else if(subIndex==2) {
-								trangChinh.setPanelBody(new panelTimKiemHD());
+								DatBan.playVideo("video/88189-602915536_small.mp4");
+							} else if (subIndex == 2) {
+
 							}
 						}
-						// Công cụ index=4
-						if(index==4) {
-							
+						// Khách hàng
+						if (index == 2) {
+							if (subIndex == 1) {
+							} else if (subIndex == 2) {
+							}
 						}
-						// Tài khoản index=5
+						// Hóa đơn
+						if (index == 3) {
+
+						}
+						// Công cụ
+						if (index == 4) {
+
+						}
+						// Tài khoản
 						if (index == 5) {
 							if (subIndex == 1) {
 
 							} else if (subIndex == 2) {
-								trangChinh.setVisible(false); // Ẩn homeNV thay vì đóng
-                                trangDangNhap.switchToLogin(); // Chuyển về Main
-                                trangDangNhap.setVisible(true);
-								
-							} else if(subIndex==3){
+								trangChinh.setVisible(false);
+								trangDangNhap.switchToLogin();
+								trangDangNhap.setVisible(true);
+
+							} else if (subIndex == 3) {
 								System.exit(0);
 							}
 						}

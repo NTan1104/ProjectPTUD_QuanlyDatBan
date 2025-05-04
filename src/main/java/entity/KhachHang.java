@@ -5,6 +5,15 @@ public class KhachHang {
     private String tenKH;
     private String sdt;
     private String gioiTinh;
+    public KhachHang() {
+    	
+    }
+    public KhachHang(String maKH, String tenKH, String sdt, String gioiTinh) {
+    	this.maKH = maKH;
+    	this.tenKH = tenKH;
+    	this.sdt = sdt;
+    	this.gioiTinh = gioiTinh;
+    }
 	public String getMaKH() {
 		return maKH;
 	}
