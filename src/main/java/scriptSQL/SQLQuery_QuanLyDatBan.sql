@@ -651,3 +651,25 @@ END
 
 
 
+create PROCEDURE sp_XoaPhieuDatTheoBan
+    @MaBan NVARCHAR(10)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    DECLARE @LatestMaPDB NVARCHAR(10);
+
+    -- Lấy mã phiếu đặt mới nhất theo MaPDB
+    SELECT TOP 1 @LatestMaPDB = MaPDB
+    FROM PhieuDatBan
+    WHERE MaBan = @MaBan
+    ORDER BY MaPDB DESC;
+
+    -- Nếu tìm thấy mã phiếu đặt mới nhất, thì tiến hành xóa
+    IF @LatestMaPDB IS NOT NULL
+    BEGIN
+        DELETE FROM ChiTietPhieuDatBan WHERE MaPDB = @LatestMaPDB;
+        DELETE FROM PhieuDatBan WHERE MaPDB = @LatestMaPDB;
+    END
+END;
+

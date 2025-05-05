@@ -59,7 +59,7 @@ public class PanelQLyHD extends JPanel {
     private RoundedScrollPane scrollPane;
     private DAO_HoaDon daoHoaDon;
     private DAO_CTHoaDon daoCTHoaDon;
-    private JTextField txtMaHD, txtNhanVien, txtPhongBan, txtKhachHang, txtSDT, txtThoiGian, txtThue, txtTongTien;
+    private JTextField txtMaHD, txtNhanVien, txtPhongBan, txtKhachHang, txtSDT, txtThoiGian, txtThue, txtTongTien, txtKhuyenMai;
     private JTable detailTable;
     private DefaultTableModel detailTableModel;
     private final double TAX_RATE = 0.08;
@@ -198,10 +198,18 @@ public class PanelQLyHD extends JPanel {
         detailPanel.add(lblThue);
         detailPanel.add(txtThue);
 
+        JLabel lblKhuyenMai = new JLabel("Khuyến mãi:");
+        lblKhuyenMai.setBounds(20, 400, 100, 25);
+        txtKhuyenMai = new JTextField();
+        txtKhuyenMai.setBounds(130, 400, 200, 25);
+        txtKhuyenMai.setEditable(false);
+        detailPanel.add(lblKhuyenMai);
+        detailPanel.add(txtKhuyenMai);
+
         JLabel lblTongTien = new JLabel("Tổng tiền:");
-        lblTongTien.setBounds(20, 400, 100, 25);
+        lblTongTien.setBounds(20, 440, 100, 25);
         txtTongTien = new JTextField();
-        txtTongTien.setBounds(130, 400, 200, 25);
+        txtTongTien.setBounds(130, 440, 200, 25);
         txtTongTien.setEditable(false);
         detailPanel.add(lblTongTien);
         detailPanel.add(txtTongTien);
@@ -216,7 +224,7 @@ public class PanelQLyHD extends JPanel {
         detailTable = new JTable(detailTableModel);
         detailTable.getTableHeader().setReorderingAllowed(false);
         JScrollPane detailScrollPane = new JScrollPane(detailTable);
-        detailScrollPane.setBounds(20, 440, 450, 260);
+        detailScrollPane.setBounds(20, 480, 450, 220);
         detailPanel.add(detailScrollPane);
 
         JButton btnInHoaDon = new JButton("In Hóa Đơn");
@@ -289,11 +297,15 @@ public class PanelQLyHD extends JPanel {
             }
             double subTotal = ctList.stream().mapToDouble(CTHoaDon::getThanhTien).sum();
             double tax = subTotal * TAX_RATE;
-            double total = subTotal + tax;
+            double totalBeforeDiscount = subTotal + tax;
+
+            double giamGiaPercent = hd.getTrangThai().equalsIgnoreCase("Đã thanh toán") && hd.getKhuyenMai() != null 
+                ? hd.getKhuyenMai().getPhanTramGiamGia() 
+                : 0;
+            double giamGiaAmount = (giamGiaPercent / 100.0) * subTotal;
+
+            double total = totalBeforeDiscount - giamGiaAmount;
             double daTra = hd.getTrangThai().equalsIgnoreCase("Đã thanh toán") ? total : 0;
-            double giamGia = hd.getTrangThai().equalsIgnoreCase("Đã thanh toán") && hd.getKhuyenMai() != null 
-                    ? hd.getKhuyenMai().getPhanTramGiamGia() 
-                    : 0;
 
             Object[] row = {
                 hd.getMaHD(),
@@ -302,7 +314,7 @@ public class PanelQLyHD extends JPanel {
                 hd.getKhachHang() != null ? hd.getKhachHang().getMaKH() : "Khách lẻ",
                 hd.getTrangThai(),
                 df.format(total),
-                df.format(giamGia),
+                df.format(giamGiaAmount),
                 df.format(daTra)
             };
             tableModel.addRow(row);
@@ -329,7 +341,13 @@ public class PanelQLyHD extends JPanel {
         }
         double subTotal = ctList.stream().mapToDouble(CTHoaDon::getThanhTien).sum();
         double tax = subTotal * TAX_RATE;
-        double total = subTotal + tax;
+        double totalBeforeDiscount = subTotal + tax;
+
+        double giamGiaPercent = hd.getTrangThai().equalsIgnoreCase("Đã thanh toán") && hd.getKhuyenMai() != null 
+            ? hd.getKhuyenMai().getPhanTramGiamGia() 
+            : 0;
+        double giamGiaAmount = (giamGiaPercent / 100.0) * subTotal;
+        double total = totalBeforeDiscount - giamGiaAmount;
 
         txtMaHD.setText(hd.getMaHD() != null ? hd.getMaHD() : "");
         txtNhanVien.setText(hd.getNhanVien() != null ? hd.getNhanVien().getMaNV() : "");
@@ -338,6 +356,7 @@ public class PanelQLyHD extends JPanel {
         txtSDT.setText(hd.getKhachHang() != null ? hd.getKhachHang().getSdt() : "");
         txtThoiGian.setText(hd.getNgayLap() != null ? dtf.format(hd.getNgayLap()) : "");
         txtThue.setText(df.format(tax));
+        txtKhuyenMai.setText(giamGiaPercent + "%");
         txtTongTien.setText(df.format(total));
 
         detailTableModel.setRowCount(0);
@@ -375,7 +394,6 @@ public class PanelQLyHD extends JPanel {
             double tax = subTotal * TAX_RATE;
             double total = subTotal + tax;
 
-            // Tạo PrinterJob
             PrinterJob printerJob = PrinterJob.getPrinterJob();
             printerJob.setPrintable(new Printable() {
                 @Override
@@ -387,16 +405,13 @@ public class PanelQLyHD extends JPanel {
                     Graphics2D g2d = (Graphics2D) graphics;
                     g2d.translate(pageFormat.getImageableX(), pageFormat.getImageableY());
 
-                    // Thiết lập font và màu
                     g2d.setFont(new Font("Arial", Font.BOLD, 14));
                     g2d.setColor(Color.BLACK);
 
-                    // Vẽ tiêu đề
                     g2d.drawString("Nhà hàng SERBUR", 100, 50);
                     g2d.drawString("Địa chỉ: 4 Nguyễn Văn Bảo, P5, Gò Vấp", 100, 70);
                     g2d.drawString("HÓA ĐƠN", 250, 100);
 
-                    // Vẽ thông tin hóa đơn
                     g2d.setFont(new Font("Arial", Font.PLAIN, 12));
                     int y = 130;
                     g2d.drawString("Mã hóa đơn: " + txtMaHD.getText(), 100, y); y += 20;
@@ -405,7 +420,6 @@ public class PanelQLyHD extends JPanel {
                     g2d.drawString("Khách hàng: " + txtKhachHang.getText(), 100, y); y += 20;
                     g2d.drawString("SĐT: " + txtSDT.getText(), 100, y); y += 40;
 
-                    // Vẽ tiêu đề bảng chi tiết
                     y += 20;
                     g2d.setFont(new Font("Arial", Font.BOLD, 12));
                     int[] columnWidths = {80, 150, 80, 100, 100};
@@ -416,20 +430,18 @@ public class PanelQLyHD extends JPanel {
                     g2d.drawString("Giá bán", x, y); x += columnWidths[3];
                     g2d.drawString("Thành tiền", x, y);
 
-                    // Vẽ chi tiết hóa đơn
                     y += 20;
                     g2d.setFont(new Font("Arial", Font.PLAIN, 12));
                     for (CTHoaDon ct : ctList) {
                         x = 100;
                         g2d.drawString(ct.getMaMonAn(), x, y); x += columnWidths[0];
-                        g2d.drawString(ct.getMaMonAn(), x, y); x += columnWidths[1]; // TODO: Thay bằng tên món ăn nếu có
+                        g2d.drawString(ct.getMaMonAn(), x, y); x += columnWidths[1];
                         g2d.drawString(String.valueOf(ct.getSoLuong()), x, y); x += columnWidths[2];
                         g2d.drawString(df.format(ct.getDonGia()), x, y); x += columnWidths[3];
                         g2d.drawString(df.format(ct.getThanhTien()), x, y);
                         y += 20;
                     }
 
-                    // Vẽ tổng kết
                     y += 20;
                     g2d.drawString("Thời gian: " + txtThoiGian.getText(), 100, y); y += 20;
                     g2d.drawString("Thuế (8%): " + txtThue.getText(), 100, y); y += 20;
@@ -439,7 +451,6 @@ public class PanelQLyHD extends JPanel {
                 }
             });
 
-            // Hiển thị dialog chọn máy in
             if (printerJob.printDialog()) {
                 printerJob.print();
                 JOptionPane.showMessageDialog(this, "In hóa đơn thành công!", "Thành công", JOptionPane.INFORMATION_MESSAGE);
