@@ -315,83 +315,159 @@ GO
 
 ---HÓA ĐƠN TÍN
 
-CREATE PROCEDURE sp_GetAllHoaDon
-AS
-BEGIN
-    SELECT 
-        hd.MaHD, 
-        hd.MaNV, 
-        hd.MaKH, 
-        hd.MaPTTT, 
-        hd.MaVAT, 
-        hd.MaKM, 
-        hd.NgayLap, 
-        hd.NgayXuat, 
-        hd.TrangThai,
-        b.MaBan,
-        kh.SDT,
-        COALESCE(SUM(ct.SoLuong * ct.DonGia), 0) AS TongTien
-    FROM HoaDon hd
-    LEFT JOIN KhachHang kh ON hd.MaKH = kh.MaKH
-    LEFT JOIN ChiTietHoaDon ct ON hd.MaHD = ct.MaHD
-    LEFT JOIN ChiTietBan cb ON hd.MaHD = cb.MaHD
-    LEFT JOIN Ban b ON cb.MaBan = b.MaBan
-    GROUP BY 
-        hd.MaHD, hd.MaNV, hd.MaKH, hd.MaPTTT, hd.MaVAT, hd.MaKM, 
-        hd.NgayLap, hd.NgayXuat, hd.TrangThai, b.MaBan, kh.SDT
-    ORDER BY 
-        hd.NgayLap DESC;
-END;
 
-CREATE PROCEDURE sp_SearchHoaDon
-    @MaHD VARCHAR(10) = NULL,
-    @MaKH VARCHAR(10) = NULL,
-    @MaBan VARCHAR(10) = NULL,
-    @SDT VARCHAR(15) = NULL,
-    @TrangThai NVARCHAR(50) = NULL,
-    @StartDate DATETIME = NULL,
-    @EndDate DATETIME = NULL,
-    @SortByGia VARCHAR(10) = NULL
-AS
-BEGIN
-    SELECT 
-        hd.MaHD, 
-        hd.MaNV, 
-        hd.MaKH, 
-        hd.MaPTTT, 
-        hd.MaVAT, 
-        hd.MaKM, 
-        hd.NgayLap, 
-        hd.NgayXuat, 
-        hd.TrangThai,
-        b.MaBan,
-        kh.SDT,
-        SUM(ct.SoLuong * ct.DonGia) AS TongTien
-    FROM HoaDon hd
-    LEFT JOIN KhachHang kh ON hd.MaKH = kh.MaKH
-    LEFT JOIN ChiTietHoaDon ct ON hd.MaHD = ct.MaHD
-    LEFT JOIN ChiTietBan cb ON hd.MaHD = cb.MaHD
-    LEFT JOIN Ban b ON cb.MaBan = b.MaBan
-    WHERE 
-        (@MaHD IS NULL OR hd.MaHD LIKE '%' + @MaHD + '%')
-        AND (@MaKH IS NULL OR hd.MaKH LIKE '%' + @MaKH + '%')
-        AND (@MaBan IS NULL OR b.MaBan LIKE '%' + @MaBan + '%')
-        AND (@SDT IS NULL OR kh.SDT LIKE '%' + @SDT + '%')
-        AND (@TrangThai IS NULL OR @TrangThai = 'Tất cả' OR hd.TrangThai = @TrangThai)
-        AND (@StartDate IS NULL OR hd.NgayLap >= @StartDate)
-        AND (@EndDate IS NULL OR hd.NgayLap <= @EndDate)
-    GROUP BY 
-        hd.MaHD, hd.MaNV, hd.MaKH, hd.MaPTTT, hd.MaVAT, hd.MaKM, 
-        hd.NgayLap, hd.NgayXuat, hd.TrangThai, b.MaBan, kh.SDT
-    ORDER BY 
-        CASE 
-            WHEN @SortByGia = 'DESC' THEN SUM(ct.SoLuong * ct.DonGia)
-        END DESC,
-        CASE 
-            WHEN @SortByGia = 'ASC' THEN SUM(ct.SoLuong * ct.DonGia)
-        END ASC,
-        hd.NgayLap DESC; -- Default sort by NgayLap if SortByGia is not specified
-END;
+
+CREATE PROCEDURE sp_GetAllHoaDon  
+AS  
+BEGIN  
+    SET NOCOUNT ON;  
+    SELECT   
+        hd.MaHD,  
+        nv.MaNV,  
+        kh.MaKH,  
+        pttt.MaPTTT,  
+        tvat.MaVAT,  
+        km.MaKM,  
+        hd.NgayLap,  
+        hd.NgayXuat,  
+        hd.TrangThai,  
+        b.MaBan  
+    FROM HoaDon hd  
+    LEFT JOIN NhanVien nv ON hd.MaNV = nv.MaNV  
+    LEFT JOIN KhachHang kh ON hd.MaKH = kh.MaKH  
+    LEFT JOIN PhuongThucThanhToan pttt ON hd.MaPTTT = pttt.MaPTTT  
+    LEFT JOIN ThueVAT tvat ON hd.MaVAT = tvat.MaVAT  
+    LEFT JOIN KhuyenMai km ON hd.MaKM = km.MaKM  
+    LEFT JOIN PhieuDatBan pdb ON hd.MaKH = pdb.MaKhachHang  
+    LEFT JOIN Ban b ON pdb.MaBan = b.MaBan  
+    GROUP BY   
+        hd.MaHD, nv.MaNV, kh.MaKH, pttt.MaPTTT, tvat.MaVAT, km.MaKM,  
+        hd.NgayLap, hd.NgayXuat, hd.TrangThai, b.MaBan;  
+END  
+
+create PROCEDURE sp_SearchHoaDon  
+    @MaHD VARCHAR(10) = NULL,  
+    @MaKH VARCHAR(10) = NULL,  
+    @MaBan VARCHAR(10) = NULL,  
+    @SDT VARCHAR(15) = NULL,  
+    @TrangThai NVARCHAR(50) = NULL,  
+    @StartDate DATETIME = NULL,  
+    @EndDate DATETIME = NULL,  
+    @SortByGia VARCHAR(10) = NULL  
+AS  
+BEGIN  
+    SET NOCOUNT ON;  
+  
+    IF @SortByGia = 'ASC'  
+    BEGIN  
+        SELECT   
+            hd.MaHD,  
+            nv.MaNV,  
+            kh.MaKH,  
+            pttt.MaPTTT,  
+            tvat.MaVAT,  
+            km.MaKM,  
+            hd.NgayLap,  
+            hd.NgayXuat,  
+            hd.TrangThai,  
+            b.MaBan,  
+            SUM(cthd.SoLuong * cthd.DonGia) AS TongTien  
+        FROM HoaDon hd  
+        LEFT JOIN NhanVien nv ON hd.MaNV = nv.MaNV  
+        LEFT JOIN KhachHang kh ON hd.MaKH = kh.MaKH  
+        LEFT JOIN PhuongThucThanhToan pttt ON hd.MaPTTT = pttt.MaPTTT  
+        LEFT JOIN ThueVAT tvat ON hd.MaVAT = tvat.MaVAT  
+        LEFT JOIN KhuyenMai km ON hd.MaKM = km.MaKM  
+        LEFT JOIN PhieuDatBan pdb ON hd.MaKH = pdb.MaKhachHang  
+        LEFT JOIN Ban b ON pdb.MaBan = b.MaBan  
+        LEFT JOIN ChiTietHoaDon cthd ON hd.MaHD = cthd.MaHD  
+        WHERE   
+            (@MaHD IS NULL OR hd.MaHD LIKE @MaHD)  
+            AND (@MaKH IS NULL OR kh.MaKH LIKE @MaKH)  
+            AND (@MaBan IS NULL OR b.MaBan LIKE @MaBan)  
+            AND (@SDT IS NULL OR kh.SDT LIKE @SDT)  
+            AND (@TrangThai IS NULL OR hd.TrangThai = @TrangThai OR @TrangThai = N'Tất cả')  
+            AND (@StartDate IS NULL OR hd.NgayLap >= @StartDate)  
+            AND (@EndDate IS NULL OR hd.NgayLap <= @EndDate)  
+        GROUP BY   
+            hd.MaHD, nv.MaNV, kh.MaKH, pttt.MaPTTT, tvat.MaVAT, km.MaKM,  
+            hd.NgayLap, hd.NgayXuat, hd.TrangThai, b.MaBan  
+        ORDER BY TongTien ASC;  
+    END  
+    ELSE IF @SortByGia = 'DESC'  
+    BEGIN  
+        SELECT   
+            hd.MaHD,  
+            nv.MaNV,  
+            kh.MaKH,  
+            pttt.MaPTTT,  
+            tvat.MaVAT,  
+            km.MaKM,  
+            hd.NgayLap,  
+            hd.NgayXuat,  
+            hd.TrangThai,  
+            b.MaBan,  
+            SUM(cthd.SoLuong * cthd.DonGia) AS TongTien  
+        FROM HoaDon hd  
+        LEFT JOIN NhanVien nv ON hd.MaNV = nv.MaNV  
+        LEFT JOIN KhachHang kh ON hd.MaKH = kh.MaKH  
+        LEFT JOIN PhuongThucThanhToan pttt ON hd.MaPTTT = pttt.MaPTTT  
+        LEFT JOIN ThueVAT tvat ON hd.MaVAT = tvat.MaVAT  
+        LEFT JOIN KhuyenMai km ON hd.MaKM = km.MaKM  
+        LEFT JOIN PhieuDatBan pdb ON hd.MaKH = pdb.MaKhachHang  
+        LEFT JOIN Ban b ON pdb.MaBan = b.MaBan  
+        LEFT JOIN ChiTietHoaDon cthd ON hd.MaHD = cthd.MaHD  
+        WHERE   
+            (@MaHD IS NULL OR hd.MaHD LIKE @MaHD)  
+            AND (@MaKH IS NULL OR kh.MaKH LIKE @MaKH)  
+            AND (@MaBan IS NULL OR b.MaBan LIKE @MaBan)  
+            AND (@SDT IS NULL OR kh.SDT LIKE @SDT)  
+            AND (@TrangThai IS NULL OR hd.TrangThai = @TrangThai OR @TrangThai = N'Tất cả')  
+            AND (@StartDate IS NULL OR hd.NgayLap >= @StartDate)  
+            AND (@EndDate IS NULL OR hd.NgayLap <= @EndDate)  
+        GROUP BY   
+            hd.MaHD, nv.MaNV, kh.MaKH, pttt.MaPTTT, tvat.MaVAT, km.MaKM,  
+            hd.NgayLap, hd.NgayXuat, hd.TrangThai, b.MaBan  
+        ORDER BY TongTien DESC;  
+    END  
+    ELSE  
+    BEGIN  
+        -- Mặc định nếu không chọn ASC/DESC thì sắp xếp theo ngày  
+        SELECT   
+            hd.MaHD,  
+            nv.MaNV,  
+            kh.MaKH,  
+            pttt.MaPTTT,  
+            tvat.MaVAT,  
+            km.MaKM,  
+            hd.NgayLap,  
+            hd.NgayXuat,  
+            hd.TrangThai,  
+            b.MaBan,  
+            SUM(cthd.SoLuong * cthd.DonGia) AS TongTien  
+        FROM HoaDon hd  
+        LEFT JOIN NhanVien nv ON hd.MaNV = nv.MaNV  
+        LEFT JOIN KhachHang kh ON hd.MaKH = kh.MaKH  
+        LEFT JOIN PhuongThucThanhToan pttt ON hd.MaPTTT = pttt.MaPTTT  
+        LEFT JOIN ThueVAT tvat ON hd.MaVAT = tvat.MaVAT  
+        LEFT JOIN KhuyenMai km ON hd.MaKM = km.MaKM  
+        LEFT JOIN PhieuDatBan pdb ON hd.MaKH = pdb.MaKhachHang  
+        LEFT JOIN Ban b ON pdb.MaBan = b.MaBan  
+        LEFT JOIN ChiTietHoaDon cthd ON hd.MaHD = cthd.MaHD  
+        WHERE   
+            (@MaHD IS NULL OR hd.MaHD LIKE @MaHD)  
+            AND (@MaKH IS NULL OR kh.MaKH LIKE @MaKH)  
+            AND (@MaBan IS NULL OR b.MaBan LIKE @MaBan)  
+            AND (@SDT IS NULL OR kh.SDT LIKE @SDT)  
+            AND (@TrangThai IS NULL OR hd.TrangThai = @TrangThai OR @TrangThai = N'Tất cả')  
+            AND (@StartDate IS NULL OR hd.NgayLap >= @StartDate)  
+            AND (@EndDate IS NULL OR hd.NgayLap <= @EndDate)  
+        GROUP BY   
+            hd.MaHD, nv.MaNV, kh.MaKH, pttt.MaPTTT, tvat.MaVAT, km.MaKM,  
+            hd.NgayLap, hd.NgayXuat, hd.TrangThai, b.MaBan  
+        ORDER BY hd.NgayLap DESC;  
+    END  
+END  
 
 ---Mon An
 CREATE PROCEDURE GetAllMonAn
