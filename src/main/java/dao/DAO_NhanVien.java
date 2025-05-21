@@ -14,7 +14,7 @@ import entity.NhanVien;
 public class DAO_NhanVien extends BaseDAO {
 
     // Get NhanVien by ID
-    public NhanVien getNVbyID(String idNV) {
+    public NhanVien getNVbyID(String idNV) throws Exception {
         String sql = "SELECT * FROM NhanVien WHERE MaNV = ?";
         try (Connection conn = new BaseDAO().getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -33,9 +33,22 @@ public class DAO_NhanVien extends BaseDAO {
         }
         return null;
     }
+    
+    public List<String> getAllMaNhanVien() throws Exception {
+        List<String> maNhanVienList = new ArrayList<>();
+        String sql = "SELECT MaNV FROM NhanVien";
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                maNhanVienList.add(rs.getString("MaNV"));
+            }
+        }
+        return maNhanVienList;
+    }
 
     // Get all NhanVien
-    public List<NhanVien> getAllNhanVien() {
+    public List<NhanVien> getAllNhanVien() throws Exception {
         List<NhanVien> list = new ArrayList<>();
         String sql = "{call GetAllNhanVien()}";
         try (Connection conn = new BaseDAO().getConnection();
@@ -62,7 +75,7 @@ public class DAO_NhanVien extends BaseDAO {
     }
 
     // Search for NhanVien based on a keyword
-    public List<NhanVien> searchNhanVien(String keyword) {
+    public List<NhanVien> searchNhanVien(String keyword) throws Exception {
         List<NhanVien> list = new ArrayList<>();
         String sql = "{call SearchNhanVien(?)}";
         try (Connection conn = new BaseDAO().getConnection();
@@ -117,7 +130,7 @@ public class DAO_NhanVien extends BaseDAO {
     }
 
     // Insert NhanVien
-    public String insertNhanVien(NhanVien nv) {
+    public String insertNhanVien(NhanVien nv) throws Exception {
         String sql = "{call InsertNhanVien(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)}";
         String validationError = validateNhanVienData(nv);
         if (validationError != null) {
@@ -143,7 +156,7 @@ public class DAO_NhanVien extends BaseDAO {
     }
 
     // Update NhanVien
-    public String updateNhanVien(NhanVien nv) {
+    public String updateNhanVien(NhanVien nv) throws Exception {
         String sql = "{call UpdateNhanVien(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)}";
         String validationError = validateNhanVienData(nv);
         if (validationError != null) {
@@ -169,7 +182,7 @@ public class DAO_NhanVien extends BaseDAO {
     }
 
     // Delete NhanVien
-    public void deleteNhanVien(String maNV) {
+    public void deleteNhanVien(String maNV) throws Exception {
         String sql = "{call DeleteNhanVien(?)}";
         try (Connection conn = new BaseDAO().getConnection(); CallableStatement cs = conn.prepareCall(sql)) {
             cs.setString(1, maNV);

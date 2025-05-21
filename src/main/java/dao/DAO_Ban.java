@@ -119,6 +119,29 @@ public class DAO_Ban extends BaseDAO {
         }
         return null;
     }
+    
+    public Ban getBanbyMaBan(String maBan) {
+        String sql = "SELECT * FROM Ban WHERE MaBan = ?";
+        try {
+            conn = new BaseDAO().getConnection();
+            ps = conn.prepareStatement(sql);
+            ps.setString(1, maBan);
+            rs = ps.executeQuery();
+            if (rs.next()) {
+                return new Ban(rs.getString(1),
+                        rs.getString(2),
+                        rs.getInt(3),
+                        rs.getInt(4),
+                        rs.getString(5),
+                        rs.getString(6));
+            }
+        } catch (Exception e) {
+            System.out.println("Lỗi khi lấy thông tin bàn từ MaBan: " + e.getMessage());
+        } finally {
+            closeResources();
+        }
+        return null;
+    }
     private void closeResources() {
         try {
             if (rs != null) rs.close();

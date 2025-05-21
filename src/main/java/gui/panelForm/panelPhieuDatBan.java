@@ -6,8 +6,6 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.RoundRectangle2D;
-import java.sql.SQLException;
-import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
@@ -18,10 +16,9 @@ import dao.DAO_Ban;
 import dao.DAO_KhachHang;
 import dao.DAO_PhieuDatBan;
 import dao.DAO_CTPhieuDatBan;
+import entity.CTPhieuDatBan;
 import entity.KhachHang;
 import entity.PhieuDatBan;
-import entity.CTPhieuDatBan;
-import entity.Ban;
 
 public class panelPhieuDatBan extends JPanel {
     private static final long serialVersionUID = 1L;
@@ -203,6 +200,19 @@ public class panelPhieuDatBan extends JPanel {
                 return;
             }
 
+            try {
+                int soLuongKhach = Integer.parseInt(soLuong);
+                if (soLuongKhach < 1 || soLuongKhach > 4) {
+                    JOptionPane.showMessageDialog(this, "Số lượng khách tối đa 4 người", "Lỗi", JOptionPane.WARNING_MESSAGE);
+                    txtSoLuong.requestFocusInWindow();
+                    return;
+                }
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(this, "Số lượng khách phải là một số hợp lệ!", "Lỗi", JOptionPane.WARNING_MESSAGE);
+                txtSoLuong.requestFocusInWindow();
+                return;
+            }
+
             if (selectedDate == null) {
                 JOptionPane.showMessageDialog(this, "Vui lòng chọn ngày giờ đặt!", "Lỗi", JOptionPane.WARNING_MESSAGE);
                 return;
@@ -215,7 +225,7 @@ public class panelPhieuDatBan extends JPanel {
                 try {
                     boolean updateSuccess = ban_DAO.capNhatTrangThaiBan(soBan, "ĐÃ ĐẶT");
                     if (updateSuccess) {
-                        String maPDB = phieuDatBan_DAO.getNextMaPDB();
+                    	String maPDB = phieuDatBan_DAO.getNextMaPDB();
                         PhieuDatBan pdb = new PhieuDatBan();
                         pdb.setMaPDB(maPDB);
                         pdb.setMaKH(maKhachHang);
@@ -223,11 +233,11 @@ public class panelPhieuDatBan extends JPanel {
                         pdb.setMaNV("NV001");
 
                         boolean insertPDBSuccess = phieuDatBan_DAO.insertPhieuDatBan(pdb);
-
+                        
                         if (insertPDBSuccess) {
                             LocalDateTime timeNhanBan = selectedDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
                             LocalDateTime timeTraBan = timeNhanBan.plusHours(2);
-
+                            
                             CTPhieuDatBan ctPDB = new CTPhieuDatBan();
                             ctPDB.setMaPDB(maPDB);
                             ctPDB.setTimeNhanBan(timeNhanBan);

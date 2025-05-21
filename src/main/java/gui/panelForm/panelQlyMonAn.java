@@ -55,7 +55,6 @@ public class panelQlyMonAn extends JPanel {
     private JTextField txtTimKiem;
     private JComboBox<String> cbLoaiMonAn;
     private JTextField txtDuongDanHinhAnh;
-    private JComboBox<String> cbTimKiemTheo;
     private JComboBox<String> cbLocLoaiMonAn;
     private JTextArea txtGhiChu;
     private JLabel lblXemTruocHinhAnh;
@@ -63,7 +62,6 @@ public class panelQlyMonAn extends JPanel {
     private DAO_MonAn daoMonAn;
     private int columns;
     private int chieuRongPnlDanhSach;
-    private String chuoiTimKiemMacDinh;
 
     public panelQlyMonAn() throws Exception {
         setBackground(SystemColor.controlHighlight);
@@ -88,7 +86,6 @@ public class panelQlyMonAn extends JPanel {
         daoMonAn = new DAO_MonAn();
         columns = 4;
         chieuRongPnlDanhSach = 1200;
-        chuoiTimKiemMacDinh = "Tìm kiếm theo mã món ăn, tên món ăn";
 
         // Danh sách món ăn
         pnlDanhSachMonAn = new JPanel();
@@ -130,7 +127,7 @@ public class panelQlyMonAn extends JPanel {
         JPanel pnlNhapThongTin = new JPanel();
         pnlNhapThongTin.setBorder(new TitledBorder(new EtchedBorder(EtchedBorder.LOWERED, new Color(255, 255, 255), new Color(160, 160, 160)),
             "Thông tin món ăn", TitledBorder.CENTER, TitledBorder.TOP, null, new Color(0, 0, 0)));
-        pnlNhapThongTin.setBounds(1232, 47, 303, 793);
+        pnlNhapThongTin.setBounds(1232, 10, 303, 793);
         add(pnlNhapThongTin);
         pnlNhapThongTin.setLayout(null);
 
@@ -295,60 +292,7 @@ public class panelQlyMonAn extends JPanel {
         add(btnCapNhat);
 
         // TextField tìm kiếm với placeholder và nút tìm kiếm bên trong
-        txtTimKiem = new JTextField();
-        txtTimKiem.setBounds(1232, 10, 238, 35);
-        txtTimKiem.setColumns(10);
 
-        txtTimKiem.setText(chuoiTimKiemMacDinh);
-        txtTimKiem.setForeground(Color.GRAY);
-        txtTimKiem.setFont(new Font("Segoe UI", Font.PLAIN, 10));
-        txtTimKiem.addFocusListener(new FocusListener() {
-            @Override
-            public void focusGained(FocusEvent e) {
-                if (txtTimKiem.getText().equals(chuoiTimKiemMacDinh)) {
-                    txtTimKiem.setText("");
-                    txtTimKiem.setForeground(Color.BLACK);
-                    txtTimKiem.setFont(new Font("Segoe UI", Font.PLAIN, 10));
-                }
-            }
-
-            @Override
-            public void focusLost(FocusEvent e) {
-                if (txtTimKiem.getText().isEmpty()) {
-                    txtTimKiem.setText(chuoiTimKiemMacDinh);
-                    txtTimKiem.setForeground(Color.GRAY);
-                    txtTimKiem.setFont(new Font("Segoe UI", Font.PLAIN, 10));
-                }
-            }
-        });
-
-        JButton btnTimKiem = new JButton();
-        try {
-            ImageIcon icon = new ImageIcon(getClass().getResource("/img/search.png"));
-            Image scaledIcon = icon.getImage().getScaledInstance(16, 16, Image.SCALE_SMOOTH);
-            btnTimKiem.setIcon(new ImageIcon(scaledIcon));
-        } catch (Exception e) {
-            btnTimKiem.setText("🔍");
-        }
-        btnTimKiem.setBorder(null);
-        btnTimKiem.setBackground(txtTimKiem.getBackground());
-        btnTimKiem.setFocusPainted(false);
-        btnTimKiem.setContentAreaFilled(false);
-        txtTimKiem.setLayout(new BorderLayout());
-        txtTimKiem.add(btnTimKiem, BorderLayout.EAST);
-        txtTimKiem.setBorder(BorderFactory.createCompoundBorder(
-            txtTimKiem.getBorder(),
-            BorderFactory.createEmptyBorder(0, 5, 0, 5)
-        ));
-        add(txtTimKiem);
-
-        cbTimKiemTheo = new JComboBox<>();
-        cbTimKiemTheo.setBounds(1472, 10, 63, 35);
-        add(cbTimKiemTheo);
-
-        cbTimKiemTheo.addItem("");
-        cbTimKiemTheo.addItem("Mã món ăn");
-        cbTimKiemTheo.addItem("Tên món ăn");
 
         // ActionListener cho cbLocLoaiMonAn
         cbLocLoaiMonAn.addActionListener(e -> {
@@ -390,43 +334,7 @@ public class panelQlyMonAn extends JPanel {
             }
         });
 
-        // ActionListener cho btnTimKiem
-        btnTimKiem.addActionListener(e -> {
-            String query = txtTimKiem.getText();
-            String searchBy = cbTimKiemTheo.getSelectedItem().toString();
-            if (!query.equals(chuoiTimKiemMacDinh) && !query.isEmpty()) {
-                try {
-                    List<MonAn> result = daoMonAn.searchMonAn(query, searchBy);
-                    pnlDanhSachMonAn.removeAll();
-                    int i = 0;
-                    for (MonAn monAn : result) {
-                        int row = i / columns;
-                        int col = i % columns;
-                        int x = 10 + col * (270 + 39);
-                        int y = 10 + row * (340 + 33);
-                        JPanel dishPanel = createMonAnPanel(
-                            monAn.getTenMonAn(),
-                            monAn.getDuongDanHinhAnh(),
-                            monAn.getMaMonAn(),
-                            String.valueOf(monAn.getGia()),
-                            monAn.getLoaiMonAn(),
-                            monAn.getGhiChu()
-                        );
-                        dishPanel.setBounds(x, y, 270, 340);
-                        pnlDanhSachMonAn.add(dishPanel);
-                        i++;
-                    }
-                    int panelHeightSearch = (int) Math.ceil((double) i / columns) * (340 + 33);
-                    pnlDanhSachMonAn.setBounds(0, 0, chieuRongPnlDanhSach, panelHeightSearch);
-                    pnlDanhSachMonAn.setPreferredSize(new Dimension(chieuRongPnlDanhSach, panelHeightSearch));
-                    pnlDanhSachMonAn.revalidate();
-                    pnlDanhSachMonAn.repaint();
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                    JOptionPane.showMessageDialog(this, "Lỗi tìm kiếm: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
-                }
-            }
-        });
+        
 
         // ActionListener cho btnThem
         btnThem.addActionListener(e -> {

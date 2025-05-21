@@ -17,7 +17,6 @@ import entity.KhuyenMai;
 public class DAO_KhuyenMai extends BaseDAO {
     List<KhuyenMai> list = new ArrayList<KhuyenMai>();
 
-    // Get all active promotions
     public List<KhuyenMai> getAllKMs() throws SQLException {
         list.clear();
         String sql = "SELECT * FROM KhuyenMai";
@@ -27,9 +26,9 @@ public class DAO_KhuyenMai extends BaseDAO {
             LocalDateTime now = LocalDateTime.now();
             while (rs.next()) {
                 LocalDateTime ngayKetThuc = rs.getTimestamp("Ngayketthuc") != null ?
-                        rs.getTimestamp("Ngayketthuc").toLocalDateTime() : null;
+                    rs.getTimestamp("Ngayketthuc").toLocalDateTime() : null;
                 LocalDateTime ngayBatDau = rs.getTimestamp("Ngaybatdau") != null ?
-                        rs.getTimestamp("Ngaybatdau").toLocalDateTime() : null;
+                    rs.getTimestamp("Ngaybatdau").toLocalDateTime() : null;
 
                 // Only include promotions that are still active (NgayKetThuc is null or after now)
                 if (ngayKetThuc == null || ngayKetThuc.isAfter(now)) {
@@ -45,14 +44,15 @@ public class DAO_KhuyenMai extends BaseDAO {
         } catch (SQLException e) {
             System.out.println("Lỗi khi lấy danh sách khuyến mãi: " + e.getMessage());
             throw e;
-        }
+        } catch (Exception e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
         return list;
     }
-
-    // Validate MaKM format (KMXX)
     private boolean isValidMaKM(String maKM) {
         if (maKM == null || !maKM.matches("^KM\\d{2}$")) {
-            JOptionPane.showMessageDialog(null,
+            JOptionPane.showMessageDialog(null, 
                 "Invalid MaKM format: " + maKM + ". Mã Khuyến mãi phải có cấu trúc KMXX (X là số).",
                 "Lỗi định dạng", 
                 JOptionPane.ERROR_MESSAGE);
@@ -61,9 +61,8 @@ public class DAO_KhuyenMai extends BaseDAO {
         return true;
     }
 
-    // Add a new promotion
     public boolean addPromotion(KhuyenMai promotion) {
-        if (promotion == null || !isValidMaKM(promotion.getMaKM()) ||
+        if (promotion == null || !isValidMaKM(promotion.getMaKM()) || 
             promotion.getPhanTramGiamGia() < 0 || promotion.getPhanTramGiamGia() > 100) {
             return false;
         }
@@ -83,12 +82,15 @@ public class DAO_KhuyenMai extends BaseDAO {
                 "Lỗi cơ sở dữ liệu",
                 JOptionPane.ERROR_MESSAGE);
             return false;
-        }
+        } catch (Exception e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		return false;
     }
 
-    // Update an existing promotion
     public boolean updatePromotion(KhuyenMai promotion) {
-        if (promotion == null || !isValidMaKM(promotion.getMaKM()) ||
+        if (promotion == null || !isValidMaKM(promotion.getMaKM()) || 
             promotion.getPhanTramGiamGia() < 0 || promotion.getPhanTramGiamGia() > 100) {
             return false;
         }
@@ -108,15 +110,17 @@ public class DAO_KhuyenMai extends BaseDAO {
                 "Lỗi cơ sở dữ liệu",
                 JOptionPane.ERROR_MESSAGE);
             return false;
-        }
+        } catch (Exception e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		return false;
     }
 
-    // Delete a promotion by ID
     public boolean deletePromotion(String promotionId) {
         if (!isValidMaKM(promotionId)) {
             return false;
         }
-
         // Check if the promotion is referenced in HoaDon
         String checkSql = "SELECT COUNT(*) FROM HoaDon WHERE MaKM = ?";
         try (Connection conn = getConnection();
@@ -138,7 +142,10 @@ public class DAO_KhuyenMai extends BaseDAO {
                 "Lỗi cơ sở dữ liệu",
                 JOptionPane.ERROR_MESSAGE);
             return false;
-        }
+        } catch (Exception e2) {
+			// TODO Auto-generated catch block
+			e2.printStackTrace();
+		}
 
         // Proceed with deletion if no references are found
         String deleteSql = "{CALL sp_DeletePromotion(?)}";
@@ -153,10 +160,41 @@ public class DAO_KhuyenMai extends BaseDAO {
                 "Lỗi cơ sở dữ liệu",
                 JOptionPane.ERROR_MESSAGE);
             return false;
-        }
+        } catch (Exception e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		return false;
     }
 
-    // Get promotion by ID
+    public List<KhuyenMai> getAllPromotions() {
+        List<KhuyenMai> promotions = new ArrayList<>();
+        String sql = "{CALL sp_GetAllPromotions}";
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                LocalDateTime ngayBatDau = rs.getTimestamp("NgayBatDau") != null ?
+                    rs.getTimestamp("NgayBatDau").toLocalDateTime() : null;
+                LocalDateTime ngayKetThuc = rs.getTimestamp("NgayKetThuc") != null ?
+                    rs.getTimestamp("NgayKetThuc").toLocalDateTime() : null;
+                KhuyenMai promotion = new KhuyenMai();
+                promotion.setMaKM(rs.getString("MaKM"));
+                promotion.setDieuKien(rs.getString("DieuKien"));
+                promotion.setNgayBatDau(ngayBatDau);
+                promotion.setngayKetThuc(ngayKetThuc);
+                promotion.setPhanTramGiamGia(rs.getDouble("PhanTramGiamGia"));
+                promotions.add(promotion);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } catch (Exception e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+        return promotions;
+    }
+
     public KhuyenMai getPromotionById(String promotionId) {
         if (!isValidMaKM(promotionId)) {
             return null;
@@ -182,7 +220,10 @@ public class DAO_KhuyenMai extends BaseDAO {
             }
         } catch (SQLException e) {
             e.printStackTrace();
-        }
+        } catch (Exception e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
         return null;
     }
 }

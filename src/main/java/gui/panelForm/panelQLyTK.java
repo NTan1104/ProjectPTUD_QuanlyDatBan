@@ -6,11 +6,15 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.HeadlessException;
 import java.awt.RenderingHints;
 import java.awt.SystemColor;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.geom.RoundRectangle2D;
+import java.sql.Date;
+import java.sql.SQLException;
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.time.ZoneId;
 import java.util.List;
@@ -26,6 +30,7 @@ import com.formdev.flatlaf.FlatIntelliJLaf;
 import com.formdev.flatlaf.FlatLaf;
 import com.formdev.flatlaf.fonts.roboto.FlatRobotoFont;
 
+import dao.DAO_NhanVien;
 import dao.DAO_TaiKhoan;
 import entity.NhanVien;
 import entity.TaiKhoan;
@@ -41,6 +46,7 @@ public class panelQLyTK extends JPanel {
     private RoundedScrollPane scrDanhSachTaiKhoan;
     private JTable tblDanhSachTaiKhoan;
     private DAO_TaiKhoan daoTaiKhoan;
+    private DAO_NhanVien daoNhanVien;
 
     public panelQLyTK() throws Exception {
         setBackground(SystemColor.controlHighlight);
@@ -48,6 +54,7 @@ public class panelQLyTK extends JPanel {
         setSize(1535, 850);
 
         daoTaiKhoan = new DAO_TaiKhoan();
+        daoNhanVien = new DAO_NhanVien();
 
         // Cài đặt font FlatLaf
         FlatLaf.registerCustomDefaultsSource("themes");
@@ -155,11 +162,59 @@ public class panelQLyTK extends JPanel {
         loadComboBoxData();
 
         // Xử lý sự kiện cho các nút
-        btnThem.addActionListener(e -> themTaiKhoan());
-        btnXoa.addActionListener(e -> xoaTaiKhoan());
-        btnSua.addActionListener(e -> suaTaiKhoan());
-        btnTim.addActionListener(e -> timTaiKhoan());
-
+        btnThem.addActionListener(e -> {
+			try {
+				themTaiKhoan();
+			} catch (Exception e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+		});
+        btnXoa.addActionListener(e -> {
+			try {
+				xoaTaiKhoan();
+			} catch (SQLException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+		});
+        btnSua.addActionListener(e -> {
+			try {
+				suaTaiKhoan();
+			} catch (Exception e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+		});
+        btnTim.addActionListener(e -> {
+			try {
+				timTaiKhoan();
+			} catch (Exception e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+		});
+        
+        cbMaNhanVien.addActionListener(e -> {
+            String maNV = (String) cbMaNhanVien.getSelectedItem();
+            if (maNV != null) {
+                try {
+                    List<TaiKhoan> taiKhoanList = daoTaiKhoan.loadTaiKhoanData();
+                    boolean hasAccount = taiKhoanList.stream().anyMatch(tk -> tk.getNhanVien().getMaNV().equals(maNV));
+                    btnThem.setEnabled(!hasAccount);
+                    if (hasAccount) {
+                        JOptionPane.showMessageDialog(this, "Nhân viên này đã có tài khoản!", "Cảnh báo", JOptionPane.WARNING_MESSAGE);
+                    }
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                    JOptionPane.showMessageDialog(this, "Lỗi khi kiểm tra tài khoản: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+                } catch (Exception e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+            }
+        });
+        
         FlatRobotoFont.install();
     }
 
@@ -167,6 +222,7 @@ public class panelQLyTK extends JPanel {
         mdlDanhSachTaiKhoan.setRowCount(0);
         List<TaiKhoan> taiKhoanList = daoTaiKhoan.loadTaiKhoanData();
         SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm");
+        DecimalFormat df = new DecimalFormat("#.#"); // Định dạng 1 chữ số thập phân
         int stt = 1;
         for (TaiKhoan tk : taiKhoanList) {
             String gioVaoLam = tk.getGioVaoLam() != null ? sdf.format(Date.from(tk.getGioVaoLam().atZone(ZoneId.systemDefault()).toInstant())) : "";
@@ -175,10 +231,10 @@ public class panelQLyTK extends JPanel {
                 stt++,
                 tk.getNhanVien().getMaNV(),
                 tk.getTenDangNhap(),
-                "****",
+                tk.getMatKhau(),
                 gioVaoLam,
                 gioNghi,
-                tk.getSoGioLam(),
+                df.format(tk.getSoGioLam()), // Định dạng SoGioLam với 1 chữ số thập phân
                 tk.getTrangThai()
             };
             mdlDanhSachTaiKhoan.addRow(row);
@@ -186,30 +242,52 @@ public class panelQLyTK extends JPanel {
     }
 
     private void loadComboBoxData() throws Exception {
-        List<TaiKhoan> taiKhoanList = daoTaiKhoan.loadTaiKhoanData();
-        DefaultComboBoxModel<String> model = new DefaultComboBoxModel<>();
-        for (TaiKhoan tk : taiKhoanList) {
-            model.addElement(tk.getNhanVien().getMaNV());
+        try {
+            List<String> maNhanVienList = daoNhanVien.getAllMaNhanVien();
+            DefaultComboBoxModel<String> model = new DefaultComboBoxModel<>();
+            for (String maNV : maNhanVienList) {
+                model.addElement(maNV);
+            }
+            cbMaNhanVien.setModel(model);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Lỗi khi tải danh sách mã nhân viên: " + e.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
         }
-        cbMaNhanVien.setModel(model);
     }
 
-    private void themTaiKhoan() {
+    private void themTaiKhoan() throws Exception {
         String maNV = (String) cbMaNhanVien.getSelectedItem();
         String tenDangNhap = txtTenDangNhap.getText().trim();
-        String matKhau = txtMatKhau.getText().trim();
+        String matKhau = new String(txtMatKhau.getText()).trim();
 
-        if (maNV == null || tenDangNhap.isEmpty() || matKhau.isEmpty()) {
+        if (maNV == null || tenDangNhap.isEmpty() || tenDangNhap.equals("Nhập tên tài khoản") || matKhau.isEmpty() || matKhau.equals("Nhập mật khẩu")) {
             JOptionPane.showMessageDialog(this, "Vui lòng nhập đầy đủ thông tin!", "Lỗi", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
+        if (tenDangNhap.length() < 3) {
+            JOptionPane.showMessageDialog(this, "Tên đăng nhập phải có ít nhất 3 ký tự!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        if (matKhau.length() < 6) {
+            JOptionPane.showMessageDialog(this, "Mật khẩu phải có ít nhất 6 ký tự!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
         try {
+            // Kiểm tra xem tên đăng nhập đã tồn tại chưa
+            List<TaiKhoan> taiKhoanList = daoTaiKhoan.loadTaiKhoanData();
+            if (taiKhoanList.stream().anyMatch(tk -> tk.getTenDangNhap().equals(tenDangNhap))) {
+                JOptionPane.showMessageDialog(this, "Tên đăng nhập đã tồn tại!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
             TaiKhoan tk = new TaiKhoan();
-            tk.setNhanVien(new NhanVien(maNV));
+            tk.setNhanVien(daoNhanVien.getNVbyID(maNV));
             tk.setTenDangNhap(tenDangNhap);
             tk.setMatKhau(matKhau);
-            tk.setTrangThai("Hoạt động");
+            tk.setTrangThai("Online");
 
             if (daoTaiKhoan.addTaiKhoan(tk)) {
                 JOptionPane.showMessageDialog(this, "Thêm tài khoản thành công!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
@@ -218,37 +296,46 @@ public class panelQLyTK extends JPanel {
             } else {
                 JOptionPane.showMessageDialog(this, "Thêm tài khoản thất bại!", "Lỗi", JOptionPane.ERROR_MESSAGE);
             }
-        } catch (Exception ex) {
+        } catch (SQLException ex) {
             ex.printStackTrace();
             JOptionPane.showMessageDialog(this, "Lỗi khi thêm tài khoản: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
         }
     }
 
-    private void xoaTaiKhoan() {
+    private void xoaTaiKhoan() throws SQLException {
         int selectedRow = tblDanhSachTaiKhoan.getSelectedRow();
         if (selectedRow < 0) {
             JOptionPane.showMessageDialog(this, "Vui lòng chọn tài khoản để xóa!", "Cảnh báo", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
-        String tenDangNhap = (String) mdlDanhSachTaiKhoan.getValueAt(selectedRow, 2);
-        int confirm = JOptionPane.showConfirmDialog(this, "Bạn có chắc muốn xóa tài khoản " + tenDangNhap + "?", "Xác nhận", JOptionPane.YES_NO_OPTION);
-        if (confirm == JOptionPane.YES_OPTION) {
+        String maNV = (String) mdlDanhSachTaiKhoan.getValueAt(selectedRow, 1); // Lấy MaNV từ cột 1
+        String tenDangNhap = (String) mdlDanhSachTaiKhoan.getValueAt(selectedRow, 2); // Lấy TenDangNhap để hiển thị
+        int option = JOptionPane.showConfirmDialog(this, 
+            "Bạn có chắc muốn xóa tài khoản " + tenDangNhap + "?", 
+            "Xác nhận", 
+            JOptionPane.YES_NO_OPTION, 
+            JOptionPane.QUESTION_MESSAGE);
+        if (option == JOptionPane.YES_OPTION) {
             try {
-                if (daoTaiKhoan.deleteTaiKhoan(tenDangNhap)) {
-                    JOptionPane.showMessageDialog(this, "Xóa tài khoản thành công!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
-                    loadTableData();
-                } else {
-                    JOptionPane.showMessageDialog(this, "Xóa tài khoản thất bại!", "Lỗi", JOptionPane.ERROR_MESSAGE);
-                }
-            } catch (Exception ex) {
-                ex.printStackTrace();
-                JOptionPane.showMessageDialog(this, "Lỗi khi xóa tài khoản: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
-            }
+				if (daoTaiKhoan.deleteTaiKhoan(maNV)) {
+				    JOptionPane.showMessageDialog(this, "Xóa tài khoản thành công!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+				    loadTableData();
+				    clearForm();
+				} else {
+				    JOptionPane.showMessageDialog(this, "Xóa tài khoản thất bại!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+				}
+			} catch (HeadlessException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
         }
     }
 
-    private void suaTaiKhoan() {
+    private void suaTaiKhoan() throws Exception {
         int selectedRow = tblDanhSachTaiKhoan.getSelectedRow();
         if (selectedRow < 0) {
             JOptionPane.showMessageDialog(this, "Vui lòng chọn tài khoản để sửa!", "Cảnh báo", JOptionPane.WARNING_MESSAGE);
@@ -257,16 +344,21 @@ public class panelQLyTK extends JPanel {
 
         String maNV = (String) cbMaNhanVien.getSelectedItem();
         String tenDangNhap = txtTenDangNhap.getText().trim();
-        String matKhau = txtMatKhau.getText().trim();
+        String matKhau = new String(txtMatKhau.getText()).trim();
 
-        if (maNV == null || tenDangNhap.isEmpty() || matKhau.isEmpty()) {
+        if (maNV == null || tenDangNhap.isEmpty() || tenDangNhap.equals("Nhập tên tài khoản") || matKhau.isEmpty() || matKhau.equals("Nhập mật khẩu")) {
             JOptionPane.showMessageDialog(this, "Vui lòng nhập đầy đủ thông tin!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        if (matKhau.length() < 6) {
+            JOptionPane.showMessageDialog(this, "Mật khẩu phải có ít nhất 6 ký tự!", "Lỗi", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
         try {
             TaiKhoan tk = new TaiKhoan();
-            tk.setNhanVien(new NhanVien(maNV));
+            tk.setNhanVien(daoNhanVien.getNVbyID(maNV));
             tk.setTenDangNhap(tenDangNhap);
             tk.setMatKhau(matKhau);
             tk.setTrangThai((String) mdlDanhSachTaiKhoan.getValueAt(selectedRow, 7));
@@ -278,19 +370,19 @@ public class panelQLyTK extends JPanel {
             } else {
                 JOptionPane.showMessageDialog(this, "Cập nhật tài khoản thất bại!", "Lỗi", JOptionPane.ERROR_MESSAGE);
             }
-        } catch (Exception ex) {
+        } catch (SQLException ex) {
             ex.printStackTrace();
             JOptionPane.showMessageDialog(this, "Lỗi khi cập nhật tài khoản: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
         }
     }
-
-    private void timTaiKhoan() {
+    private void timTaiKhoan() throws Exception {
         String tenDangNhap = txtTenDangNhap.getText().trim();
         if (tenDangNhap.isEmpty() || tenDangNhap.equals("Nhập tên tài khoản")) {
             try {
                 loadTableData(); // Nếu không nhập, load toàn bộ
-            } catch (Exception ex) {
+            } catch (SQLException ex) {
                 ex.printStackTrace();
+                JOptionPane.showMessageDialog(this, "Lỗi khi tải dữ liệu: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
             }
             return;
         }
@@ -307,7 +399,7 @@ public class panelQLyTK extends JPanel {
                     stt++,
                     tk.getNhanVien().getMaNV(),
                     tk.getTenDangNhap(),
-                    "****",
+                    tk.getMatKhau(), // Ẩn mật khẩu
                     gioVaoLam,
                     gioNghi,
                     tk.getSoGioLam(),
@@ -318,7 +410,7 @@ public class panelQLyTK extends JPanel {
             if (taiKhoanList.isEmpty()) {
                 JOptionPane.showMessageDialog(this, "Không tìm thấy tài khoản!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
             }
-        } catch (Exception ex) {
+        } catch (SQLException ex) {
             ex.printStackTrace();
             JOptionPane.showMessageDialog(this, "Lỗi khi tìm kiếm: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
         }
@@ -369,7 +461,7 @@ public class panelQLyTK extends JPanel {
         textField.setForeground(Color.GRAY);
 
         textField.addFocusListener(new java.awt.event.FocusListener() {
-            @Override
+            @Override	
             public void focusGained(java.awt.event.FocusEvent e) {
                 if (textField.getText().equals(placeholder)) {
                     textField.setText("");

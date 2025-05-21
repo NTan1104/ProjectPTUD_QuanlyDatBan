@@ -66,4 +66,25 @@ public class DAO_CTPhieuDatBan extends BaseDAO {
 		}
 		return null;
 	}
+	
+	public boolean deleteCTPhieuDatBanByMaPDB(String maPDB) {
+        String sql = "DELETE FROM ChiTietPhieuDatBan WHERE MaPDB = ?";
+        try {
+            conn = new BaseDAO().getConnection();
+            ps = conn.prepareStatement(sql);
+            ps.setString(1, maPDB);
+            int rowsAffected = ps.executeUpdate();
+            return rowsAffected > 0;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        } finally {
+            try {
+                if (ps != null) ps.close();
+                if (conn != null) conn.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 }

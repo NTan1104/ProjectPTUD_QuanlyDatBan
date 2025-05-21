@@ -45,7 +45,7 @@ public class DAO_MonAn extends BaseDAO {
             cstmt.setDouble(3, monAn.getGia());
             cstmt.setString(4, monAn.getGhiChu());
             cstmt.setString(5, monAn.getLoaiMonAn());
-            cstmt.setString(6, monAn.getLinkIMG());
+            cstmt.setString(6, monAn.getDuongDanHinhAnh());
             cstmt.executeUpdate();
         }
     }
@@ -60,7 +60,7 @@ public class DAO_MonAn extends BaseDAO {
             cstmt.setDouble(3, monAn.getGia());
             cstmt.setString(4, monAn.getGhiChu());
             cstmt.setString(5, monAn.getLoaiMonAn());
-            cstmt.setString(6, monAn.getLinkIMG());
+            cstmt.setString(6, monAn.getDuongDanHinhAnh());
             cstmt.executeUpdate();
         }
     }
@@ -192,5 +192,25 @@ public class DAO_MonAn extends BaseDAO {
             e.printStackTrace();
         }
         return loaiMonAnList;
+    }
+    
+    // Lấy món ăn theo tên
+    public MonAn getMonAnByTen(String tenMonAn) throws SQLException {
+        String query = "SELECT * FROM MonAn WHERE TenMonAn = ?";
+        try (Connection conn = new BaseDAO().getConnection(); PreparedStatement ps = conn.prepareStatement(query)) {
+            ps.setString(1, tenMonAn);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return new MonAn(rs.getString(1), rs.getString(2), 
+                		rs.getFloat(3), 
+                		rs.getString(4), 
+                		rs.getString(5),
+                		rs.getString(6));
+            }
+        } catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        return null;
     }
 }

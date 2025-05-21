@@ -1,4 +1,3 @@
-
 package gui.panelForm;
 
 import java.awt.BorderLayout;
@@ -23,22 +22,28 @@ import com.formdev.flatlaf.FlatIntelliJLaf;
 import com.formdev.flatlaf.FlatLaf;
 import com.formdev.flatlaf.fonts.roboto.FlatRobotoFont;
 
-import dao.DAO_KhachHang;
-import entity.KhachHang;
+import dao.DAO_MonAn;
+import entity.MonAn;
 import gui.tabbed.CheckBoxTableHeaderRenderer;
 import gui.tabbed.TableHeaderAlignment;
 
-public class panelSearchKH extends JPanel {
+public class panelTimKiemMonAn extends JPanel {
     private JTable table;
     private JLabel lbTitle;
     private JTextField txtSearch;
     private JComboBox<String> cbSearchCriteria;
     private JButton btnRefresh;
+    private DAO_MonAn daoMonAn;
 
-    public panelSearchKH() {
-        initComponents();
-        init();
-        loadDataToTable(); // Load dữ liệu khi khởi tạo
+    public panelTimKiemMonAn() {
+        try {
+            daoMonAn = new DAO_MonAn();
+            initComponents();
+            init();
+            loadDataToTable(); // Load dữ liệu khi khởi tạo
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Lỗi khởi tạo: " + e.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     private void initComponents() {
@@ -48,7 +53,7 @@ public class panelSearchKH extends JPanel {
         FlatIntelliJLaf.setup();
         UIManager.put("defaultFont", new Font(FlatRobotoFont.FAMILY, Font.PLAIN, 13));
 
-        lbTitle = new JLabel("TÌM KIẾM KHÁCH HÀNG");
+        lbTitle = new JLabel("TÌM KIẾM MÓN ĂN");
         lbTitle.setFont(new Font("Segoe UI", Font.BOLD, 20));
         
         UIManager.put("Panel.background", new Color(247, 248, 252)); // Trắng xám nhạt nhẹ nhàng
@@ -59,7 +64,7 @@ public class panelSearchKH extends JPanel {
         UIManager.put("Component.borderColor", new Color(229, 231, 235)); // Viền xám nhạt
         
         // Thanh tìm kiếm với placeholder
-        String placeholder = "Tìm kiếm khách hàng tại đây";
+        String placeholder = "Tìm kiếm món ăn tại đây";
         txtSearch = new JTextField();
         txtSearch.setBounds(30, 60, 238, 35);
         txtSearch.setText(placeholder);
@@ -109,11 +114,11 @@ public class panelSearchKH extends JPanel {
         // ComboBox tiêu chí tìm kiếm
         cbSearchCriteria = new JComboBox<>();
         cbSearchCriteria.setBounds(278, 60, 150, 35);
-        cbSearchCriteria.addItem("Mã khách hàng");
-        cbSearchCriteria.addItem("Tên khách hàng");
-        cbSearchCriteria.addItem("Số điện thoại");
+        cbSearchCriteria.addItem("Mã món ăn");
+        cbSearchCriteria.addItem("Tên món ăn");
         add(cbSearchCriteria);
-        
+
+        // Nút làm mới
         btnRefresh = new JButton("Làm mới");
         btnRefresh.setBounds(438, 60, 100, 35);
         btnRefresh.setFont(new Font("Segoe UI", Font.PLAIN, 13));
@@ -130,13 +135,14 @@ public class panelSearchKH extends JPanel {
         table.setModel(new DefaultTableModel(
                 new Object[][] {},
                 new String[] {
-                        "#", "STT", "Mã khách hàng", "Tên khách hàng", "Số điện thoại", "Giới tính"
+                        "#", "STT", "Mã món ăn", "Tên món ăn", "Giá", "Loại món ăn", "Ghi chú"
                 }
         ) {
             @Override
             public Class<?> getColumnClass(int columnIndex) {
                 Class[] types = new Class[] {
                         Boolean.class,
+                        Object.class,
                         Object.class,
                         Object.class,
                         Object.class,
@@ -158,7 +164,11 @@ public class panelSearchKH extends JPanel {
         if (table.getColumnModel().getColumnCount() > 0) {
             table.getColumnModel().getColumn(0).setMaxWidth(100);
             table.getColumnModel().getColumn(1).setPreferredWidth(100);
-            table.getColumnModel().getColumn(2).setPreferredWidth(100);
+            table.getColumnModel().getColumn(2).setPreferredWidth(150);
+            table.getColumnModel().getColumn(3).setPreferredWidth(200);
+            table.getColumnModel().getColumn(4).setPreferredWidth(150);
+            table.getColumnModel().getColumn(5).setPreferredWidth(150);
+            table.getColumnModel().getColumn(6).setPreferredWidth(300);
         }
 
         table.getColumnModel().getColumn(0).setHeaderRenderer(new CheckBoxTableHeaderRenderer(table, 0));
@@ -167,44 +177,47 @@ public class panelSearchKH extends JPanel {
         setLayout(null);
         add(scrollPane);
 
-        JLabel lblNewLabel = new JLabel("TÌM KIẾM KHÁCH HÀNG");
+        JLabel lblNewLabel = new JLabel("TÌM KIẾM MÓN ĂN");
         lblNewLabel.setFont(new Font("Segoe UI", Font.BOLD, 20));
         lblNewLabel.setHorizontalAlignment(SwingConstants.CENTER);
         lblNewLabel.setBounds(18, 10, 1507, 27);
         add(lblNewLabel);
         
+        // Sự kiện cho nút tìm kiếm
         searchButton.addActionListener(e -> {
             String query = txtSearch.getText();
             String criteria = cbSearchCriteria.getSelectedItem().toString();
             if (!query.equals(placeholder) && !query.isEmpty()) {
                 try {
-                    DAO_KhachHang dao = new DAO_KhachHang();
-                    List<KhachHang> result = dao.searchKhachHang(query, criteria);
+                    List<MonAn> result = daoMonAn.searchMonAn(query, criteria);
                     
                     DefaultTableModel model = (DefaultTableModel) table.getModel();
                     model.setRowCount(0); // Xóa dữ liệu cũ
                     int stt = 1;
-                    for (KhachHang kh : result) {
+                    for (MonAn ma : result) {
                         model.addRow(new Object[] {
                             Boolean.FALSE,
                             stt++,
-                            kh.getMaKH(),
-                            kh.getTenKH(),
-                            kh.getSdt(),
-                            kh.getGioiTinh()
+                            ma.getMaMonAn(),
+                            ma.getTenMonAn(),
+                            ma.getGia(),
+                            ma.getLoaiMonAn(),
+                            ma.getGhiChu()
                         });
                     }
                     if (result.isEmpty()) {
-                        JOptionPane.showMessageDialog(null, "Không tìm thấy khách hàng!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+                        JOptionPane.showMessageDialog(null, "Không tìm thấy món ăn!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
                     }
                 } catch (Exception ex) {
+                    ex.printStackTrace();
                     JOptionPane.showMessageDialog(null, "Lỗi khi tìm kiếm: " + ex.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
                 }
             } else {
                 JOptionPane.showMessageDialog(null, "Vui lòng nhập từ khóa tìm kiếm!", "Cảnh báo", JOptionPane.WARNING_MESSAGE);
             }
         });
-        
+
+        // Sự kiện cho nút làm mới
         btnRefresh.addActionListener(e -> {
             try {
                 loadDataToTable();
@@ -239,28 +252,29 @@ public class panelSearchKH extends JPanel {
     // Hàm load dữ liệu từ DAO vào bảng
     private void loadDataToTable() {
         try {
-            DAO_KhachHang dao = new DAO_KhachHang();
-            List<KhachHang> list = dao.getAllKhachHang();
+            List<MonAn> list = daoMonAn.getAllMonAn();
             
             DefaultTableModel model = (DefaultTableModel) table.getModel();
             model.setRowCount(0); // Xóa dữ liệu cũ
             int stt = 1;
-            for (KhachHang kh : list) {
+            for (MonAn ma : list) {
                 model.addRow(new Object[] {
                     Boolean.FALSE,
                     stt++,
-                    kh.getMaKH(),
-                    kh.getTenKH(),
-                    kh.getSdt(),
-                    kh.getGioiTinh()
+                    ma.getMaMonAn(),
+                    ma.getTenMonAn(),
+                    ma.getGia(),
+                    ma.getLoaiMonAn(),
+                    ma.getGhiChu()
                 });
             }
         } catch (Exception e) {
+            e.printStackTrace();
             JOptionPane.showMessageDialog(null, "Lỗi khi tải dữ liệu: " + e.getMessage(), "Lỗi", JOptionPane.ERROR_MESSAGE);
         }
     }
 
-    // Class RoundedScrollPane giữ nguyên
+    // Class RoundedScrollPane
     class RoundedScrollPane extends JScrollPane {
         private int cornerRadius;
 

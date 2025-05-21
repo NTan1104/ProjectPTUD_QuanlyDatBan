@@ -18,17 +18,7 @@ public class KhachHang {
 		return maKH;
 	}
 	
-	public KhachHang() {
-		super();
-	}
 
-	public KhachHang(String maKH, String tenKH, String sdt, String gioiTinh) {
-		super();
-		this.maKH = maKH;
-		this.tenKH = tenKH;
-		this.sdt = sdt;
-		this.gioiTinh = gioiTinh;
-	}
 
 	public void setMaKH(String maKH) {
 		this.maKH = maKH;

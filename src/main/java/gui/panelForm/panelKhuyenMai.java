@@ -130,7 +130,7 @@ public class panelKhuyenMai extends JPanel {
         loadPromotions();
     }
 
-    // Load danh sách khuyến mãi từ cơ sở dữ liệu
+//    // Load danh sách khuyến mãi từ cơ sở dữ liệu
     private void loadPromotions() {
         model.setRowCount(0); // Xóa dữ liệu cũ
         List<KhuyenMai> promotions = DAOKM.getAllPromotions();
@@ -156,7 +156,7 @@ public class panelKhuyenMai extends JPanel {
         List<KhuyenMai> promotions = DAOKM.getAllPromotions();
         SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
         LocalDateTime now = LocalDateTime.now();
-
+//
         for (KhuyenMai km : promotions) {
             boolean matchesStatus = false;
             if (status.equals("Tất cả")) {
@@ -265,10 +265,15 @@ public class panelKhuyenMai extends JPanel {
                     return;
                 }
 
-                if (DAOKM.getPromotionById(maKM) != null) {
-                    JOptionPane.showMessageDialog(dialog, "Mã khuyến mãi đã tồn tại!", "Lỗi", JOptionPane.ERROR_MESSAGE);
-                    return;
-                }
+                try {
+					if (DAOKM.getPromotionById(maKM) != null) {
+					    JOptionPane.showMessageDialog(dialog, "Mã khuyến mãi đã tồn tại!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+					    return;
+					}
+				} catch (Exception e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
 
                 double phanTram;
                 try {
@@ -311,13 +316,18 @@ public class panelKhuyenMai extends JPanel {
                 }
 
                 KhuyenMai km = new KhuyenMai(maKM, dieuKien, ngayKetThuc, ngayBatDau, phanTram);
-                if (DAOKM.addPromotion(km)) {
-                    JOptionPane.showMessageDialog(dialog, "Thêm khuyến mãi thành công!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
-                    loadPromotions();
-                    dialog.dispose();
-                } else {
-                    JOptionPane.showMessageDialog(dialog, "Thêm khuyến mãi thất bại!", "Lỗi", JOptionPane.ERROR_MESSAGE);
-                }
+                try {
+					if (DAOKM.addPromotion(km)) {
+					    JOptionPane.showMessageDialog(dialog, "Thêm khuyến mãi thành công!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+					    loadPromotions();
+					    dialog.dispose();
+					} else {
+					    JOptionPane.showMessageDialog(dialog, "Thêm khuyến mãi thất bại!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+					}
+				} catch (Exception e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
             }
         });
 
@@ -327,7 +337,7 @@ public class panelKhuyenMai extends JPanel {
     }
 
     // Hiển thị form chỉnh sửa khuyến mãi
-    private void showEditPromotionForm(int row) {
+    private void showEditPromotionForm(int row) throws Exception {
         String maKM = (String) model.getValueAt(row, 0);
         KhuyenMai km = DAOKM.getPromotionById(maKM);
         if (km == null) {
@@ -561,7 +571,12 @@ public class panelKhuyenMai extends JPanel {
                     fireEditingStopped();
                     int row = table.getSelectedRow();
                     if (row != -1) {
-                        showEditPromotionForm(row);
+                        try {
+							showEditPromotionForm(row);
+						} catch (Exception e1) {
+							// TODO Auto-generated catch block
+							e1.printStackTrace();
+						}
                     }
                 }
             });
@@ -596,22 +611,27 @@ public class panelKhuyenMai extends JPanel {
                             JOptionPane.YES_NO_OPTION
                         );
                         if (confirm == JOptionPane.YES_OPTION) {
-                            if (DAOKM.deletePromotion(maKM)) {
-                                JOptionPane.showMessageDialog(
-                                    panelKhuyenMai.this,
-                                    "Xóa khuyến mãi thành công!",
-                                    "Thông báo",
-                                    JOptionPane.INFORMATION_MESSAGE
-                                );
+                            try {
+								if (DAOKM.deletePromotion(maKM)) {
+								    JOptionPane.showMessageDialog(
+								        panelKhuyenMai.this,
+								        "Xóa khuyến mãi thành công!",
+								        "Thông báo",
+								        JOptionPane.INFORMATION_MESSAGE
+								    );
                                 loadPromotions(); // Tải lại danh sách
-                            } else {
-                                JOptionPane.showMessageDialog(
-                                    panelKhuyenMai.this,
-                                    "Xóa khuyến mãi thất bại!",
-                                    "Lỗi",
-                                    JOptionPane.ERROR_MESSAGE
-                                );
-                            }
+								} else {
+								    JOptionPane.showMessageDialog(
+								        panelKhuyenMai.this,
+								        "Xóa khuyến mãi thất bại!",
+								        "Lỗi",
+								        JOptionPane.ERROR_MESSAGE
+								    );
+								}
+							} catch (Exception e1) {
+								// TODO Auto-generated catch block
+								e1.printStackTrace();
+							}
                         }
                     }
                 }

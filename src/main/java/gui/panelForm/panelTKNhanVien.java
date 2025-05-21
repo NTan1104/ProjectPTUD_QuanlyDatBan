@@ -78,7 +78,7 @@ public class panelTKNhanVien extends JPanel {
 	private AbstractButton btnUpdate;
 	private AbstractButton btnAdd;
 
-    public panelTKNhanVien() {
+    public panelTKNhanVien() throws Exception {
         setBackground(SystemColor.controlHighlight);
         setLayout(null); // Sử dụng null layout để thiết lập bounds tuyệt đối
         setSize(1535, 850);
@@ -108,7 +108,12 @@ public class panelTKNhanVien extends JPanel {
         btnTimKiem.setForeground(Color.WHITE);
         btnTimKiem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                filterAndShowDetails();
+                try {
+					filterAndShowDetails();
+				} catch (Exception e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
             }
         });
         panelTop.add(btnTimKiem);
@@ -284,7 +289,12 @@ public class panelTKNhanVien extends JPanel {
             }
             if (showConfirmation("Bạn có muốn xóa nhân viên này không?")) {
                 scrollPane.setBounds(initialScrollPaneBounds);
-                deleteNhanVien();
+                try {
+					deleteNhanVien();
+				} catch (Exception e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
                 panelThongTin.setVisible(false);
                 isPanelThongTinVisible = false;
                 revalidate();
@@ -303,7 +313,7 @@ public class panelTKNhanVien extends JPanel {
 
     }
 
-    private void filterAndShowDetails() {
+    private void filterAndShowDetails() throws Exception {
         String text = txtTimKiem.getText().trim();
         tableModel.setRowCount(0); // Xóa dữ liệu cũ trong bảng
 
@@ -375,7 +385,7 @@ public class panelTKNhanVien extends JPanel {
         return option == JOptionPane.YES_OPTION;
     }
 
-    private void loadDataToTable() {
+    private void loadDataToTable() throws Exception {
         tableModel.setRowCount(0);
 
         List<NhanVien> listNV = DAONV.getAllNhanVien();
@@ -553,7 +563,7 @@ public class panelTKNhanVien extends JPanel {
             JOptionPane.showMessageDialog(this, "Lỗi khi sửa nhân viên!", "Lỗi", JOptionPane.ERROR_MESSAGE);
         }
     }
-    private void deleteNhanVien() {
+    private void deleteNhanVien() throws Exception {
         int selectedRow = table.getSelectedRow();
         if (selectedRow >= 0) {
             String maNV = table.getValueAt(selectedRow, 1).toString();
